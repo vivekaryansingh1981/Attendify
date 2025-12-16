@@ -1,4 +1,4 @@
-package com.example.attendify;
+package com.codingbros.attendify;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.LinearLayout;

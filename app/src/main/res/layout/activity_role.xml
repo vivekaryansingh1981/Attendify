@@ -76,7 +76,7 @@
                 android:layout_marginBottom="18dp">
 
                 <ImageView
-                    android:layout_width="150dp"
+                    android:layout_width="130dp"
                     android:layout_height="150dp"
                     android:src="@drawable/ic_student"
                     android:padding="8dp" />
@@ -103,7 +103,7 @@
                 android:layout_marginBottom="18dp">
 
                 <ImageView
-                    android:layout_width="150dp"
+                    android:layout_width="130dp"
                     android:layout_height="150dp"
                     android:src="@drawable/ic_faculty"
                     android:padding="8dp" />
@@ -129,7 +129,7 @@
                 android:background="@drawable/ripple_select">
 
                 <ImageView
-                    android:layout_width="150dp"
+                    android:layout_width="130dp"
                     android:layout_height="150dp"
                     android:src="@drawable/ic_parent"
                     android:padding="8dp" />

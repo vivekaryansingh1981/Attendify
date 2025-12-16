@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Attendify">
         <activity
-            android:name=".SplashActivity"
+            android:name="com.codingbros.attendify.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,10 +20,10 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".RoleSelectionActivity" />
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".RegisterActivity" />
-        <activity android:name=".StudashboardActivity" />
+        <activity android:name="com.codingbros.attendify.RoleSelectionActivity" />
+        <activity android:name="com.codingbros.attendify.LoginActivity" />
+        <activity android:name="com.codingbros.attendify.RegisterActivity" />
+        <activity android:name="com.codingbros.attendify.StudashboardActivity" />
     </application>
 
 </manifest>

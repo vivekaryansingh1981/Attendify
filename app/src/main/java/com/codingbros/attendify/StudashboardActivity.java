@@ -1,4 +1,4 @@
-package com.example.attendify;
+package com.codingbros.attendify;
 
 
 import android.os.Bundle;

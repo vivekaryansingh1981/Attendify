@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.attendify"
+    namespace = "com.codingbros.attendify"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.attendify"
+        applicationId = "com.codingbros.attendify"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
