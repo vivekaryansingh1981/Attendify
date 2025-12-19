@@ -12,7 +12,7 @@
         android:id="@+id/tv_welcome_note"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Welcome students to Student Attendance Management"
+        android:text="Welcome Prof. to Student Attendance Management"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="#0F172A"

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Attendify</string>
+    <string name="parent_login">Parent Login</string>
+    <string name="student_login">Student Login</string>
 </resources>

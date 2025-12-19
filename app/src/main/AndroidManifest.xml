@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
+
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -11,6 +13,7 @@
         android:roundIcon="@mipmap/app"
         android:supportsRtl="true"
         android:theme="@style/Theme.Attendify">
+
         <activity
             android:name="com.codingbros.attendify.SplashActivity"
             android:exported="true">
@@ -21,9 +24,12 @@
         </activity>
 
         <activity android:name="com.codingbros.attendify.RoleSelectionActivity" />
-        <activity android:name="com.codingbros.attendify.LoginActivity" />
-        <activity android:name="com.codingbros.attendify.RegisterActivity" />
+        <activity android:name="com.codingbros.attendify.ParentLoginActivity" />
+        <activity android:name="com.codingbros.attendify.StudentLoginActivity" />
+        <activity android:name="com.codingbros.attendify.FacultyLoginActivity" />
         <activity android:name="com.codingbros.attendify.StudashboardActivity" />
+        <activity android:name="com.codingbros.attendify.FacultydashboardActivity" />
     </application>
+
 
 </manifest>

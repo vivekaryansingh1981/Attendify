@@ -19,19 +19,19 @@ public class RoleSelectionActivity extends AppCompatActivity {
         btnParent = findViewById(R.id.btn_parent);
 
         btnStudent.setOnClickListener(v -> {
-            Intent intent = new Intent(RoleSelectionActivity.this, LoginActivity.class);
+            Intent intent = new Intent(RoleSelectionActivity.this, StudentLoginActivity.class);
             intent.putExtra("role", "student");
             startActivity(intent);
         });
 
         btnFaculty.setOnClickListener(v -> {
-            Intent intent = new Intent(RoleSelectionActivity.this, LoginActivity.class);
+            Intent intent = new Intent(RoleSelectionActivity.this, FacultyLoginActivity.class);
             intent.putExtra("role", "faculty");
             startActivity(intent);
         });
 
         btnParent.setOnClickListener(v -> {
-            Intent intent = new Intent(RoleSelectionActivity.this, LoginActivity.class);
+            Intent intent = new Intent(RoleSelectionActivity.this, ParentLoginActivity.class);
             intent.putExtra("role", "parent");
             startActivity(intent);
         });
