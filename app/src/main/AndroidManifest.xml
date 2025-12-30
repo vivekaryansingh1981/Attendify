@@ -23,12 +23,13 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.codingbros.attendify.RoleSelectionActivity" />
-        <activity android:name="com.codingbros.attendify.ParentLoginActivity" />
-        <activity android:name="com.codingbros.attendify.StudentLoginActivity" />
-        <activity android:name="com.codingbros.attendify.FacultyLoginActivity" />
-        <activity android:name="com.codingbros.attendify.StudashboardActivity" />
-        <activity android:name="com.codingbros.attendify.FacultydashboardActivity" />
+        <activity android:name=".RoleSelectionActivity" />
+        <activity android:name=".ParentLoginActivity" />
+        <activity android:name=".StudentLoginActivity" />
+        <activity android:name=".FacultyLoginActivity" />
+        <activity android:name=".StudashboardActivity" />
+        <activity android:name=".FacultydashboardActivity" />
+        <activity android:name=".NotificationActivity" />
     </application>
 
 

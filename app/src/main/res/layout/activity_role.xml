@@ -62,7 +62,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="24dp"
-            android:gravity="center">
+            android:gravity="center"
+            android:background="#A7D8FF">
 
             <!-- Student Option -->
             <LinearLayout

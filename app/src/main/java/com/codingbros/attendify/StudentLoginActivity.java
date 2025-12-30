@@ -33,7 +33,6 @@ public class StudentLoginActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
         btnSignIn = findViewById(R.id.btn_signin);
-        tvForgot = findViewById(R.id.tv_forgot);
 
         btnSignIn.setOnClickListener(v -> loginStudent());
     }
