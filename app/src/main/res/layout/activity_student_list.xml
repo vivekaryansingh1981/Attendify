@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:id="@+id/header_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="#D88D56"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="#FFFFFF"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="16dp">
+            <TextView
+                android:id="@+id/tv_subject_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Subject Name"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="18sp"/>
+            <TextView
+                android:id="@+id/tv_current_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Date: DD-MM-YYYY"
+                android:textColor="#FFE0B2"
+                android:textSize="12sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/table_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#EEEEEE"
+        android:paddingVertical="10dp"
+        app:layout_constraintTop_toBottomOf="@id/header_toolbar">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.8"
+            android:text="Roll"
+            android:textStyle="bold"
+            android:gravity="center"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.5"
+            android:text="Enrollment"
+            android:textStyle="bold"
+            android:gravity="center"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:text="Name"
+            android:textStyle="bold"
+            android:paddingStart="4dp"
+            android:gravity="center"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:text="Status"
+            android:textStyle="bold"
+            android:gravity="center"/>
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_students"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/table_header"
+        app:layout_constraintBottom_toTopOf="@id/btn_submit_attendance"/>
+
+    <Button
+        android:id="@+id/btn_submit_attendance"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Submit Attendance"
+        android:backgroundTint="#D88D56"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -28,13 +28,24 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
+        android:id="@+id/btn_logout_icon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/ic_logout"
+        app:tint="#FFFFFF"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_welcome_name"
+        app:layout_constraintBottom_toBottomOf="@id/tv_welcome_name"/>
+
+    <ImageView
         android:id="@+id/btn_notification"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:src="@android:drawable/ic_popup_reminder"
         app:tint="#FFFFFF"
-        android:layout_marginEnd="24dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toStartOf="@id/btn_logout_icon"
         app:layout_constraintTop_toTopOf="@id/tv_welcome_name"
         app:layout_constraintBottom_toBottomOf="@id/tv_welcome_name"/>
 
@@ -135,7 +146,7 @@
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@android:drawable/ic_menu_edit"
+                android:src="@drawable/ic_tracker"
                 app:tint="#FFF"/>
             <TextView
                 android:layout_width="wrap_content"
@@ -160,12 +171,11 @@
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@android:drawable/ic_menu_my_calendar"
-                app:tint="#FFF"/>
+                android:src="@android:drawable/ic_menu_my_calendar"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="My Timetable"
+                android:text="Timetable"
                 android:textColor="#FFF"
                 android:textSize="12sp"
                 android:textStyle="bold"/>
@@ -184,12 +194,11 @@
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@android:drawable/ic_menu_today"
-                app:tint="#FFF"/>
+                android:src="@android:drawable/ic_menu_today"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Academic Calendar"
+                android:text="Calendar"
                 android:textColor="#FFF"
                 android:textSize="12sp"
                 android:textStyle="bold"/>

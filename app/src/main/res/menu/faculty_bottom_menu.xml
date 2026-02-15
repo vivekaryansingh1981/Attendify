@@ -8,22 +8,22 @@
 
     <item
         android:id="@+id/nav_attendance"
-        android:icon="@android:drawable/ic_menu_edit"
+        android:icon="@drawable/ic_check"
         android:title="Attendance" />
-
-    <item
-        android:id="@+id/nav_marks"
-        android:icon="@android:drawable/ic_menu_sort_by_size"
-        android:title="Marks" />
 
     <item
         android:id="@+id/nav_timetable"
         android:icon="@android:drawable/ic_menu_my_calendar"
-        android:title="Timetable" />
+        android:title="Time Table" />
 
     <item
-        android:id="@+id/nav_calendar"
-        android:icon="@android:drawable/ic_menu_today"
-        android:title="Calendar" />
+        android:id="@+id/nav_marks"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="Marks" />
+
+    <item
+        android:id="@+id/nav_status"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:title="Status" />
 
 </menu>

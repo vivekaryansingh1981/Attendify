@@ -1,21 +1,235 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="16dp"
-    android:background="#FFFFFF">
+    android:background="#FDF8F5">
+
+    <View
+        android:id="@+id/header_bg"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:background="#D88D56"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/tv_welcome_note"
+        android:id="@+id/tv_welcome_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Welcome Prof. to Student Attendance Management"
-        android:textSize="24sp"
+        android:text="Hi, Prof. Sharma"
+        android:textSize="26sp"
         android:textStyle="bold"
-        android:textColor="#0F172A"
-        android:gravity="center" />
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-</LinearLayout>
+    <ImageView
+        android:id="@+id/btn_logout_icon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/ic_logout"
+        app:tint="#FFFFFF"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_welcome_name"
+        app:layout_constraintBottom_toBottomOf="@id/tv_welcome_name"/>
+
+    <ImageView
+        android:id="@+id/btn_notification"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@android:drawable/ic_popup_reminder"
+        app:tint="#FFFFFF"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toStartOf="@id/btn_logout_icon"
+        app:layout_constraintTop_toTopOf="@id/tv_welcome_name"
+        app:layout_constraintBottom_toBottomOf="@id/tv_welcome_name"/>
+
+    <TextView
+        android:id="@+id/tv_quick_actions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Quick Actions"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_welcome_name"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <GridLayout
+        android:id="@+id/grid_quick_actions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:rowCount="1"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_quick_actions">
+
+        <LinearLayout
+            android:id="@+id/btn_mark_attendance"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:background="@drawable/ripple_select"
+            android:backgroundTint="#F4CBA0"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:elevation="4dp">
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@drawable/ic_check"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mark Attendance"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btn_enter_marks"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:background="@drawable/ripple_select"
+            android:backgroundTint="#F4CBA0"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:elevation="4dp">
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:tint="#000000"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enter Marks"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+    </GridLayout>
+
+    <TextView
+        android:id="@+id/tv_management"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Management"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#3E2723"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/grid_quick_actions"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <GridLayout
+        android:id="@+id/grid_management"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:rowCount="1"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_management">
+
+        <LinearLayout
+            android:id="@+id/btn_edit_timetable"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:background="@drawable/ripple_select"
+            android:backgroundTint="#FFE0B2"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:elevation="4dp">
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@android:drawable/ic_menu_my_calendar"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit Time Table"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btn_status"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:background="@drawable/ripple_select"
+            android:backgroundTint="#FFE0B2"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:elevation="4dp">
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@android:drawable/ic_menu_info_details"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+    </GridLayout>
+
+    <TextView
+        android:id="@+id/tv_todays_classes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Today's Classes"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#3E2723"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/grid_management"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <LinearLayout
+        android:id="@+id/container_todays_classes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="20dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_todays_classes">
+    </LinearLayout>
+
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav_faculty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        app:menu="@menu/faculty_bottom_menu"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

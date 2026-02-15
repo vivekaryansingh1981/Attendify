@@ -65,7 +65,7 @@ public class ParentLoginActivity extends AppCompatActivity {
 
                         startActivity(new Intent(
                                 ParentLoginActivity.this,
-                                StudashboardActivity.class
+                                ParentDashboardActivity.class
                         ));
                         finish();
 

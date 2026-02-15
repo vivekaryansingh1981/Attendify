@@ -21,9 +21,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class StudashboardActivity extends AppCompatActivity {
 
     // UI Components
-    private TextView tvWelcomeName, tvAttendancePercentage, tvUpcomingClass;
+    private TextView tvWelcomeName, tvAttendancePercentage;
     private ProgressBar progressAttendance;
-    private ImageView btnNotification;
+    private ImageView btnNotification, btnLogoutIcon;
     private BottomNavigationView bottomNavigationView;
 
     // Firebase
@@ -44,10 +44,8 @@ public class StudashboardActivity extends AppCompatActivity {
         tvAttendancePercentage = findViewById(R.id.tv_attendance_percentage);
         progressAttendance = findViewById(R.id.progress_attendance);
         btnNotification = findViewById(R.id.btn_notification);
+        btnLogoutIcon = findViewById(R.id.btn_logout_icon); // The new Logout Icon
         bottomNavigationView = findViewById(R.id.bottom_nav);
-
-        // (Optional) Link other grid items if you need them clickable later
-        // View attendanceTrackerBtn = findViewById(R.id.btn_tracker);
 
         // 3. Check User Session
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -58,24 +56,63 @@ public class StudashboardActivity extends AppCompatActivity {
             sendToLogin();
         }
 
-        // 4. Temporary Logout Listener (Clicking the notification bell logs you out for now)
-        // You can move this to the "Profile" tab in the BottomNavigation later.
+        // 4. NOTIFICATION CLICK LISTENER
         btnNotification.setOnClickListener(v -> {
             Intent intent = new Intent(StudashboardActivity.this, NotificationActivity.class);
             startActivity(intent);
         });
 
-        // 5. Setup Bottom Navigation (Placeholder logic)
-        // bottomNavigationView.setOnItemSelectedListener(item -> {
-        //    switch (item.getItemId()) {
-        //        case R.id.nav_home: return true;
-        //        case R.id.nav_profile: return true;
-        //    }
-        //    return false;
-        // });
+        // 5. LOGOUT CLICK LISTENER (Direct Logout)
+        btnLogoutIcon.setOnClickListener(v -> {
+            // Sign out from Firebase
+            mAuth.signOut();
+
+            Toast.makeText(StudashboardActivity.this, "Logged Out Successfully", Toast.LENGTH_SHORT).show();
+
+            // Return to Role Selection Screen and clear history
+            Intent intent = new Intent(StudashboardActivity.this, RoleSelectionActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
+
+        // 6. BOTTOM NAVIGATION (Placeholder)
+        // You can add logic here later to switch between Fragments
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+
+            if (itemId == R.id.nav_home) {
+                // We are already on Home, do nothing or refresh
+                return true;
+            }
+            else if (itemId == R.id.nav_calendar) {
+                // Navigate to Calendar Page (Placeholder Toast for now)
+                Toast.makeText(StudashboardActivity.this, "Calendar Clicked", Toast.LENGTH_SHORT).show();
+                // startActivity(new Intent(this, CalendarActivity.class));
+                return true;
+            }
+            else if (itemId == R.id.nav_attendance) {
+                // Navigate to Attendance Detail Page
+                Toast.makeText(StudashboardActivity.this, "Attendance Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+            else if (itemId == R.id.nav_marks) {
+                // Navigate to Marks Page
+                Toast.makeText(StudashboardActivity.this, "Marks Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+            else if (itemId == R.id.nav_timetable) {
+                // Navigate to Timetable Page
+                Toast.makeText(StudashboardActivity.this, "Timetable Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
+            return false;
+        });
     }
 
     private void fetchStudentData(String userId) {
+        // Access the 'users' collection for this student
         DocumentReference docRef = db.collection("users").document(userId);
 
         docRef.get().addOnCompleteListener(task -> {
@@ -83,17 +120,19 @@ public class StudashboardActivity extends AppCompatActivity {
                 DocumentSnapshot document = task.getResult();
                 if (document.exists()) {
 
-                    // 1. Get Name
+                    // --- 1. Get Name ---
                     String name = document.getString("name");
                     if (name != null) {
+                        // Takes the first name only (e.g., "Hi, Aman!")
                         String firstName = name.split(" ")[0];
                         tvWelcomeName.setText("Hi, " + firstName + "!");
                     }
 
-                    // 2. Get the Two Numbers (Total vs Attended)
+                    // --- 2. Calculate Attendance Percentage ---
                     long totalClasses = 0;
                     long attendedClasses = 0;
 
+                    // Fetch the raw numbers from Firebase
                     if (document.contains("total_classes")) {
                         totalClasses = document.getLong("total_classes");
                     }
@@ -101,31 +140,33 @@ public class StudashboardActivity extends AppCompatActivity {
                         attendedClasses = document.getLong("attended_classes");
                     }
 
-                    // 3. Calculate Percentage Logic
+                    // Calculate logic
                     int calculatedPercentage = 0;
-
                     if (totalClasses > 0) {
                         // Formula: (Attended / Total) * 100
-                        // We multiply by 100 first to avoid decimal issues in integer division
                         calculatedPercentage = (int) ((attendedClasses * 100) / totalClasses);
                     }
 
-                    // 4. Update UI
+                    // --- 3. Update UI ---
                     tvAttendancePercentage.setText(calculatedPercentage + "%");
                     progressAttendance.setProgress(calculatedPercentage);
 
-                    // Change color if attendance is low (e.g., below 75%)
+                    // Optional: Change text color to Red if attendance is low
                     if(calculatedPercentage < 75) {
                         tvAttendancePercentage.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
                     } else {
-                        tvAttendancePercentage.setTextColor(getResources().getColor(android.R.color.black));
+                        // Reset to black (or your default color) if it's good
+                        tvAttendancePercentage.setTextColor(getResources().getColor(R.color.black));
                     }
 
                 } else {
-                    Toast.makeText(this, "Student data not found.", Toast.LENGTH_SHORT).show();
+                    // Document doesn't exist (Admin hasn't added data yet)
+                    tvWelcomeName.setText("Hi, Student!");
+                    tvAttendancePercentage.setText("--%");
+                    Toast.makeText(this, "Profile not found. Contact Admin.", Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(this, "Error fetching data", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
