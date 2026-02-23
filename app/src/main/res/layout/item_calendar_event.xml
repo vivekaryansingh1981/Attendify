@@ -4,7 +4,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="3dp"
@@ -14,14 +13,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="20dp"
+        android:padding="16dp"
         android:gravity="center_vertical">
 
-        <View
-            android:layout_width="6dp"
-            android:layout_height="40dp"
-            android:background="#000000"
-            android:layout_marginEnd="16dp"/>
+        <LinearLayout
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/shape_circle_transparent"
+            android:backgroundTint="#E0F2F1"
+            android:gravity="center"
+            android:layout_marginEnd="16dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_my_calendar"
+                app:tint="#0C7779"/>
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -30,28 +38,23 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tv_subject_name"
+                android:id="@+id/tv_event_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Mathematics"
+                android:text="Term Start"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#3E2723"/>
+                android:textColor="#37474F"/>
 
             <TextView
-                android:id="@+id/tv_subject_abbr"
+                android:id="@+id/tv_event_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="MATH"
+                android:text="15 Dec 2025"
                 android:textSize="14sp"
-                android:textColor="#8D6E63"
-                android:layout_marginTop="2dp"/>
+                android:textColor="#0C7779"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp"/>
         </LinearLayout>
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/outline_arrow_forward_ios_24"
-            app:tint="#D88D56"
-            android:rotation="0"/> </LinearLayout>
+    </LinearLayout>
 </androidx.cardview.widget.CardView>

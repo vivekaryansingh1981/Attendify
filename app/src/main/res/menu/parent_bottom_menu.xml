@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_home" android:title="Home" android:icon="@android:drawable/ic_menu_today"/>
+    <item android:id="@+id/nav_attendance" android:title="Attendance" android:icon="@drawable/ic_check"/>
+    <item android:id="@+id/nav_marks" android:title="Marks" android:icon="@android:drawable/ic_menu_edit"/>
+    <item android:id="@+id/nav_notice"
+        android:title="Notice"
+        android:icon="@android:drawable/ic_menu_agenda"/>
+    <item android:id="@+id/nav_calendar" android:title="Calendar" android:icon="@android:drawable/ic_menu_my_calendar"/>
+</menu>

@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -23,7 +22,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <activity android:name=".NoticeBoardActivity" />
+        <activity android:name=".AcademicCalendarActivity" />
         <activity android:name=".RoleSelectionActivity"/>
         <activity android:name=".ParentLoginActivity"/>
         <activity android:name=".StudentLoginActivity"/>
@@ -38,6 +38,11 @@
         <activity android:name=".EnterMarksActivity" />
         <activity android:name=".StudentMarksActivity" />
         <activity android:name=".ParentDashboardActivity" />
+        <activity android:name=".StudentMarksSubjectActivity" />
+        <activity android:name=".StudentMarksResultActivity" />
+        <activity android:name=".StudentAttendanceActivity" />
+        <activity android:name=".StudentAttendanceDetailActivity" />
+
     </application>
 
 </manifest>

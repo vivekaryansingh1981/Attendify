@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-// © Made by Varad Ubale
+// © Made by coding bros
 
 public class StatusActivity extends AppCompatActivity {
 
