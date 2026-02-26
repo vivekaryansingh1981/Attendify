@@ -1,6 +1,7 @@
 package com.codingbros.attendify;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
@@ -27,9 +28,6 @@ public class FacultyLoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        // 🔴 FORCE LOGOUT (VERY IMPORTANT)
-        mAuth.signOut();
-
         etEmail = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
         btnSignIn = findViewById(R.id.btn_signin);
@@ -38,7 +36,6 @@ public class FacultyLoginActivity extends AppCompatActivity {
     }
 
     private void loginFaculty() {
-
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
@@ -59,17 +56,17 @@ public class FacultyLoginActivity extends AppCompatActivity {
 
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
-
                     if (task.isSuccessful()) {
+                        // SAVE SESSION
+                        SharedPreferences prefs = getSharedPreferences("AttendifyPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putBoolean("isLoggedIn", true);
+                        editor.putString("userRole", "faculty");
+                        editor.apply();
 
-                        startActivity(new Intent(
-                                FacultyLoginActivity.this,
-                                FacultydashboardActivity.class
-                        ));
+                        startActivity(new Intent(FacultyLoginActivity.this, FacultydashboardActivity.class));
                         finish();
-
                     } else {
-
                         try {
                             throw task.getException();
                         } catch (FirebaseAuthInvalidCredentialsException e) {

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -22,27 +23,32 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".RoleSelectionActivity"/>
         <activity android:name=".NoticeBoardActivity" />
         <activity android:name=".AcademicCalendarActivity" />
-        <activity android:name=".RoleSelectionActivity"/>
-        <activity android:name=".ParentLoginActivity"/>
-        <activity android:name=".StudentLoginActivity"/>
-        <activity android:name=".FacultyLoginActivity"/>
         <activity android:name=".NotificationActivity"/>
-        <activity android:name=".StudashboardActivity"/>
+        <activity android:name=".StatusActivity"/>
+        <activity android:name=".StudTimetableActivity" />
+        <activity android:name=".FacultyLoginActivity"/>
         <activity android:name=".FacultydashboardActivity"/>
         <activity android:name=".EditTimetableActivity"/>
-        <activity android:name=".StatusActivity"/>
         <activity android:name=".MarkAttendanceActivity"/>
         <activity android:name=".StudentListActivity"/>
         <activity android:name=".EnterMarksActivity" />
         <activity android:name=".StudentMarksActivity" />
+        <activity android:name=".ParentLoginActivity"/>
         <activity android:name=".ParentDashboardActivity" />
-        <activity android:name=".StudentMarksSubjectActivity" />
-        <activity android:name=".StudentMarksResultActivity" />
+        <activity android:name=".StudentLoginActivity"/>
         <activity android:name=".StudentAttendanceActivity" />
         <activity android:name=".StudentAttendanceDetailActivity" />
+        <activity android:name=".StudentMarksSubjectActivity" />
+        <activity android:name=".StudentMarksResultActivity" />
+        <activity android:name=".StudashboardActivity"/>
+        <activity android:name=".StudAttendanceActivity" />
+        <activity android:name=".StudAttendanceDetailActivity" />
+        <activity android:name=".StudMarksSubjectActivity" />
+        <activity android:name=".StudMarksResultActivity" />
+        <activity android:name=".EnterMarksActivity"/>
 
     </application>
-
 </manifest>

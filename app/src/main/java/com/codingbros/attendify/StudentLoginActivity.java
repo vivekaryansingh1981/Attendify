@@ -1,11 +1,11 @@
 package com.codingbros.attendify;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,10 +17,7 @@ public class StudentLoginActivity extends AppCompatActivity {
 
     private TextInputEditText etEmail, etPassword;
     private Button btnSignIn;
-    private TextView tvForgot;
-
     private FirebaseAuth mAuth;
-
     private static final String DOMAIN = "@student.com";
 
     @Override
@@ -38,7 +35,6 @@ public class StudentLoginActivity extends AppCompatActivity {
     }
 
     private void loginStudent() {
-
         String enrollment = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
@@ -54,27 +50,20 @@ public class StudentLoginActivity extends AppCompatActivity {
 
         String email = enrollment + DOMAIN;
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this, "Please enter valid Enrollment Number", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
+                        // SAVE SESSION
+                        SharedPreferences prefs = getSharedPreferences("AttendifyPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putBoolean("isLoggedIn", true);
+                        editor.putString("userRole", "student");
+                        editor.apply();
 
-                        startActivity(new Intent(
-                                StudentLoginActivity.this,
-                                StudashboardActivity.class
-                        ));
+                        startActivity(new Intent(StudentLoginActivity.this, StudashboardActivity.class));
                         finish();
-
                     } else {
-                        Toast.makeText(
-                                this,
-                                "Login failed. Wrong credentials",
-                                Toast.LENGTH_LONG
-                        ).show();
+                        Toast.makeText(this, "Login failed. Wrong credentials", Toast.LENGTH_LONG).show();
                     }
                 });
     }

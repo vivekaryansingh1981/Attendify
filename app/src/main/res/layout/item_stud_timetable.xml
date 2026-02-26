@@ -20,14 +20,14 @@
         <View
             android:layout_width="4dp"
             android:layout_height="40dp"
-            android:background="#D88D56"/>
+            android:background="#4CB5C3"/>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginStart="12dp">
+            android:layout_marginStart="16dp">
 
             <TextView
                 android:id="@+id/tv_class_time"
@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:text="09:00 - 10:00"
                 android:textStyle="bold"
-                android:textColor="#3E2723"
+                android:textColor="#333333"
                 android:textSize="16sp"/>
 
             <TextView
@@ -43,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Mathematics"
-                android:textColor="#5D4037"
+                android:textColor="#0C7779"
                 android:textSize="14sp"
                 android:layout_marginTop="2dp"/>
 
@@ -53,20 +53,8 @@
                 android:layout_height="wrap_content"
                 android:text="Prof. Name"
                 android:textSize="12sp"
-                android:textColor="#8D6E63"
-                android:visibility="gone"/>
+                android:textColor="#757575"
+                android:layout_marginTop="2dp"/>
         </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mark Now"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="8dp"
-            android:background="@drawable/ripple_select"
-            android:backgroundTint="#F4CBA0"
-            android:textStyle="bold"
-            android:textColor="#5D4037"/>
-
     </LinearLayout>
 </androidx.cardview.widget.CardView>

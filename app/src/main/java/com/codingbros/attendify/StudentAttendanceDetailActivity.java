@@ -1,11 +1,10 @@
 package com.codingbros.attendify;
 
-import android.graphics.Color;
 import android.os.Bundle;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -26,12 +25,14 @@ import java.util.Map;
 public class StudentAttendanceDetailActivity extends AppCompatActivity {
 
     private TextView tvTitle, tvTotal, tvPresent, tvAbsent, tvMonthYear;
+    private ImageView btnPrevMonth, btnNextMonth, btnBack;
     private RecyclerView recyclerCalendar;
     private FirebaseFirestore db;
     private String subjectName, studentUid;
 
-    // Key = Day of Month (e.g., "15"), Value = "Present" or "Absent"
-    private Map<String, String> attendanceStatusMap = new HashMap<>();
+    private Map<String, String> overallAttendanceMap = new HashMap<>();
+    private Map<String, String> currentMonthDisplayMap = new HashMap<>();
+    private Calendar currentDisplayMonth;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,6 +43,9 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         studentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        currentDisplayMonth = Calendar.getInstance();
+
+        // Bind UI Elements
         tvTitle = findViewById(R.id.tv_subject_title);
         tvTotal = findViewById(R.id.tv_total_lectures);
         tvPresent = findViewById(R.id.tv_present_count);
@@ -49,99 +53,126 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
         tvMonthYear = findViewById(R.id.tv_month_year);
         recyclerCalendar = findViewById(R.id.recycler_calendar);
 
-        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+        btnBack = findViewById(R.id.btn_back);
+        btnPrevMonth = findViewById(R.id.btn_prev_month);
+        btnNextMonth = findViewById(R.id.btn_next_month);
 
-        tvTitle.setText(subjectName);
+        if (subjectName != null) {
+            tvTitle.setText(subjectName);
+        }
 
-        // Setup Calendar Grid (7 columns for 7 days)
+        // Setup Calendar Grid
         recyclerCalendar.setLayoutManager(new GridLayoutManager(this, 7));
 
+        // --- BUTTON CLICK LISTENERS ---
+        btnBack.setOnClickListener(v -> finish());
+
+        btnPrevMonth.setOnClickListener(v -> {
+            currentDisplayMonth.add(Calendar.MONTH, -1);
+            updateCalendarForMonth();
+        });
+
+        btnNextMonth.setOnClickListener(v -> {
+            currentDisplayMonth.add(Calendar.MONTH, 1);
+            updateCalendarForMonth();
+        });
+
+        // Fetch data from Firebase
         fetchAttendanceData();
     }
 
     private void fetchAttendanceData() {
-        // Query Attendance Collection where 'subject' equals selected subject
         db.collection("attendance")
                 .whereEqualTo("subject", subjectName)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+
+                    overallAttendanceMap.clear();
                     int total = 0;
                     int present = 0;
                     int absent = 0;
 
-                    // Format to parse date from doc ID or field.
-                    // Assuming date stored as "dd-MM-yyyy" in field 'date'
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
-                    Calendar cal = Calendar.getInstance();
-                    int currentMonth = cal.get(Calendar.MONTH); // 0-indexed
-
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         Map<String, Object> data = doc.getData();
 
-                        // Check if attendance data exists
-                        if (data.containsKey("attendanceData")) {
+                        if (data != null && data.containsKey("attendanceData")) {
                             Map<String, String> studentsMap = (Map<String, String>) data.get("attendanceData");
 
-                            // Check if THIS student is in the map
                             if (studentsMap != null && studentsMap.containsKey(studentUid)) {
                                 String status = studentsMap.get(studentUid);
-                                String dateStr = doc.getString("date"); // "25-02-2026"
+                                String dateStr = doc.getString("date");
 
-                                // Increment Stats
-                                total++;
-                                if ("Present".equals(status)) present++;
-                                else if ("Absent".equals(status)) absent++;
-
-                                // Map for Calendar (Only for current month)
                                 if (dateStr != null) {
-                                    try {
-                                        cal.setTime(sdf.parse(dateStr));
-                                        if (cal.get(Calendar.MONTH) == currentMonth) {
-                                            String day = String.valueOf(cal.get(Calendar.DAY_OF_MONTH));
-                                            attendanceStatusMap.put(day, status);
-                                        }
-                                    } catch (Exception e) { e.printStackTrace(); }
+                                    overallAttendanceMap.put(dateStr, status);
+
+                                    total++;
+                                    if ("Present".equals(status)) {
+                                        present++;
+                                    } else if ("Absent".equals(status)) {
+                                        absent++;
+                                    }
                                 }
                             }
                         }
                     }
 
-                    // Update UI Stats
                     tvTotal.setText(String.valueOf(total));
                     tvPresent.setText(String.valueOf(present));
                     tvAbsent.setText(String.valueOf(absent));
 
-                    // Render Calendar
-                    setupCalendarAdapter();
+                    updateCalendarForMonth();
 
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Error fetching records", Toast.LENGTH_SHORT).show());
     }
 
+    private void updateCalendarForMonth() {
+        currentMonthDisplayMap.clear();
+
+        // IMPORTANT: Make sure your Firebase dates are exactly in "dd-MM-yyyy" format (e.g., "05-03-2026")
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+
+        for (Map.Entry<String, String> entry : overallAttendanceMap.entrySet()) {
+            try {
+                Calendar recordCal = Calendar.getInstance();
+                recordCal.setTime(sdf.parse(entry.getKey()));
+
+                if (recordCal.get(Calendar.MONTH) == currentDisplayMonth.get(Calendar.MONTH) &&
+                        recordCal.get(Calendar.YEAR) == currentDisplayMonth.get(Calendar.YEAR)) {
+
+                    String day = String.valueOf(recordCal.get(Calendar.DAY_OF_MONTH));
+                    currentMonthDisplayMap.put(day, entry.getValue());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        setupCalendarAdapter();
+    }
+
     private void setupCalendarAdapter() {
-        // Generate days for current month
         List<String> days = new ArrayList<>();
-        Calendar cal = Calendar.getInstance();
 
-        // Update Header Text
         SimpleDateFormat monthDate = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
-        tvMonthYear.setText(monthDate.format(cal.getTime()));
+        tvMonthYear.setText(monthDate.format(currentDisplayMonth.getTime()));
 
+        Calendar cal = (Calendar) currentDisplayMonth.clone();
         cal.set(Calendar.DAY_OF_MONTH, 1);
-        int maxDays = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-        int startDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1; // Sunday = 0
 
-        // Add empty slots for days before 1st of month
+        int maxDays = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+        int startDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
+
         for (int i = 0; i < startDayOfWeek; i++) {
             days.add("");
         }
 
-        // Add actual days
         for (int i = 1; i <= maxDays; i++) {
             days.add(String.valueOf(i));
         }
 
-        CalendarAdapter adapter = new CalendarAdapter(days, attendanceStatusMap);
+        // We pass a NEW HashMap clone to force the adapter to realize the data has changed
+        CalendarAdapter adapter = new CalendarAdapter(days, new HashMap<>(currentMonthDisplayMap));
         recyclerCalendar.setAdapter(adapter);
     }
 }

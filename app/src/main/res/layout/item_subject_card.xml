@@ -46,6 +46,48 @@
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="2dp"/>
+
+            <LinearLayout
+                android:id="@+id/layout_attendance_stats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_classes_conducted"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="0/0 Classes Conducted"
+                        android:textSize="12sp"
+                        android:textColor="#555555"/>
+
+                    <TextView
+                        android:id="@+id/tv_percentage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0%"
+                        android:textSize="18sp"  android:textStyle="bold"
+                        android:textColor="#0C7779"/>
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/progress_attendance"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="4dp"
+                    android:max="100"
+                    android:progress="0" />
+            </LinearLayout>
         </LinearLayout>
 
         <ImageView
@@ -53,5 +95,6 @@
             android:layout_height="24dp"
             android:src="@drawable/outline_arrow_forward_ios_24"
             app:tint="#D88D56"
-            android:rotation="0"/> </LinearLayout>
+            android:rotation="0"/>
+    </LinearLayout>
 </androidx.cardview.widget.CardView>

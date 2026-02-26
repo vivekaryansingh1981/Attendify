@@ -3,7 +3,9 @@ package com.codingbros.attendify;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +27,10 @@ public class StudashboardActivity extends AppCompatActivity {
     private ProgressBar progressAttendance;
     private ImageView btnNotification, btnLogoutIcon;
     private BottomNavigationView bottomNavigationView;
+    private GridLayout gridMenu;
+
+    // The CardView for overall attendance
+    private androidx.cardview.widget.CardView cardAttendance;
 
     // Firebase
     private FirebaseAuth mAuth;
@@ -44,135 +50,158 @@ public class StudashboardActivity extends AppCompatActivity {
         tvAttendancePercentage = findViewById(R.id.tv_attendance_percentage);
         progressAttendance = findViewById(R.id.progress_attendance);
         btnNotification = findViewById(R.id.btn_notification);
-        btnLogoutIcon = findViewById(R.id.btn_logout_icon); // The new Logout Icon
+        btnLogoutIcon = findViewById(R.id.btn_logout_icon);
         bottomNavigationView = findViewById(R.id.bottom_nav);
+        gridMenu = findViewById(R.id.grid_menu);
+
+        // Link the CardView
+        cardAttendance = findViewById(R.id.card_attendance);
 
         // 3. Check User Session
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             fetchStudentData(currentUser.getUid());
         } else {
-            // If not logged in, send back to login screen
             sendToLogin();
+            return;
         }
 
-        // 4. NOTIFICATION CLICK LISTENER
+        // 4. Setup Grid Menu & Card Click Listeners
+        setupGridMenuListeners();
+
+        // Open Attendance Tracker when clicking the big percentage card
+        if (cardAttendance != null) {
+            cardAttendance.setOnClickListener(v -> {
+                startActivity(new Intent(this, StudAttendanceActivity.class));
+            });
+        }
+
+        // 5. Setup Header Icons
         btnNotification.setOnClickListener(v -> {
-            Intent intent = new Intent(StudashboardActivity.this, NotificationActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, NotificationActivity.class));
         });
 
-        // 5. LOGOUT CLICK LISTENER (Direct Logout)
         btnLogoutIcon.setOnClickListener(v -> {
-            // Sign out from Firebase
             mAuth.signOut();
-
-            Toast.makeText(StudashboardActivity.this, "Logged Out Successfully", Toast.LENGTH_SHORT).show();
-
-            // Return to Role Selection Screen and clear history
-            Intent intent = new Intent(StudashboardActivity.this, RoleSelectionActivity.class);
+            Toast.makeText(this, "Logged Out Successfully", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, RoleSelectionActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
         });
 
-        // 6. BOTTOM NAVIGATION (Placeholder)
-        // You can add logic here later to switch between Fragments
+        // 6. Setup Bottom Navigation Routing
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
 
             if (itemId == R.id.nav_home) {
-                // We are already on Home, do nothing or refresh
+                return true;
+            } else if (itemId == R.id.nav_calendar) {
+                startActivity(new Intent(this, AcademicCalendarActivity.class));
+                return true;
+            } else if (itemId == R.id.nav_attendance) {
+                startActivity(new Intent(this, StudAttendanceActivity.class));
+                return true;
+            } else if (itemId == R.id.nav_marks) {
+                startActivity(new Intent(this, StudMarksSubjectActivity.class));
+                return true;
+            } else if (itemId == R.id.nav_timetable) {
+                // UPDATED: Now routes to StudTimetableActivity
+                startActivity(new Intent(this, StudTimetableActivity.class));
                 return true;
             }
-            else if (itemId == R.id.nav_calendar) {
-                // Navigate to Calendar Page (Placeholder Toast for now)
-                Toast.makeText(StudashboardActivity.this, "Calendar Clicked", Toast.LENGTH_SHORT).show();
-                // startActivity(new Intent(this, CalendarActivity.class));
-                return true;
-            }
-            else if (itemId == R.id.nav_attendance) {
-                // Navigate to Attendance Detail Page
-                Toast.makeText(StudashboardActivity.this, "Attendance Clicked", Toast.LENGTH_SHORT).show();
-                return true;
-            }
-            else if (itemId == R.id.nav_marks) {
-                // Navigate to Marks Page
-                Toast.makeText(StudashboardActivity.this, "Marks Clicked", Toast.LENGTH_SHORT).show();
-                return true;
-            }
-            else if (itemId == R.id.nav_timetable) {
-                // Navigate to Timetable Page
-                Toast.makeText(StudashboardActivity.this, "Timetable Clicked", Toast.LENGTH_SHORT).show();
-                return true;
-            }
-
             return false;
         });
     }
 
+    private void setupGridMenuListeners() {
+        // Since the XML items don't have IDs, we fetch them by their index in the GridLayout
+        if (gridMenu != null && gridMenu.getChildCount() == 4) {
+
+            // 0: Notice Board
+            LinearLayout btnNotice = (LinearLayout) gridMenu.getChildAt(0);
+            btnNotice.setOnClickListener(v ->
+                    startActivity(new Intent(this, NoticeBoardActivity.class))
+            );
+
+            // 1: Timetable (UPDATED: Now routes to StudTimetableActivity)
+            LinearLayout btnTimetable = (LinearLayout) gridMenu.getChildAt(1);
+            btnTimetable.setOnClickListener(v ->
+                    startActivity(new Intent(this, StudTimetableActivity.class))
+            );
+
+            // 2: Calendar
+            LinearLayout btnCalendar = (LinearLayout) gridMenu.getChildAt(2);
+            btnCalendar.setOnClickListener(v ->
+                    startActivity(new Intent(this, AcademicCalendarActivity.class))
+            );
+
+            // 3: Unit Test Marks
+            LinearLayout btnMarks = (LinearLayout) gridMenu.getChildAt(3);
+            btnMarks.setOnClickListener(v ->
+                    startActivity(new Intent(this, StudMarksSubjectActivity.class))
+            );
+        }
+    }
+
     private void fetchStudentData(String userId) {
-        // Access the 'users' collection for this student
         DocumentReference docRef = db.collection("users").document(userId);
 
         docRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
+            if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot document = task.getResult();
-                if (document.exists()) {
 
-                    // --- 1. Get Name ---
+                if (document.exists()) {
+                    // --- Get Name ---
                     String name = document.getString("name");
-                    if (name != null) {
-                        // Takes the first name only (e.g., "Hi, Aman!")
+                    if (name != null && !name.isEmpty()) {
                         String firstName = name.split(" ")[0];
                         tvWelcomeName.setText("Hi, " + firstName + "!");
                     }
 
-                    // --- 2. Calculate Attendance Percentage ---
+                    // --- Calculate Attendance Percentage ---
                     long totalClasses = 0;
                     long attendedClasses = 0;
 
-                    // Fetch the raw numbers from Firebase
                     if (document.contains("total_classes")) {
-                        totalClasses = document.getLong("total_classes");
-                    }
-                    if (document.contains("attended_classes")) {
-                        attendedClasses = document.getLong("attended_classes");
+                        Object totalObj = document.get("total_classes");
+                        if (totalObj instanceof Number) totalClasses = ((Number) totalObj).longValue();
+                        else if (totalObj instanceof String) totalClasses = Long.parseLong((String) totalObj);
                     }
 
-                    // Calculate logic
+                    if (document.contains("attended_classes")) {
+                        Object attendedObj = document.get("attended_classes");
+                        if (attendedObj instanceof Number) attendedClasses = ((Number) attendedObj).longValue();
+                        else if (attendedObj instanceof String) attendedClasses = Long.parseLong((String) attendedObj);
+                    }
+
                     int calculatedPercentage = 0;
                     if (totalClasses > 0) {
-                        // Formula: (Attended / Total) * 100
                         calculatedPercentage = (int) ((attendedClasses * 100) / totalClasses);
                     }
 
-                    // --- 3. Update UI ---
+                    // --- Update UI ---
                     tvAttendancePercentage.setText(calculatedPercentage + "%");
                     progressAttendance.setProgress(calculatedPercentage);
 
-                    // Optional: Change text color to Red if attendance is low
                     if(calculatedPercentage < 75) {
                         tvAttendancePercentage.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
                     } else {
-                        // Reset to black (or your default color) if it's good
-                        tvAttendancePercentage.setTextColor(getResources().getColor(R.color.black));
+                        tvAttendancePercentage.setTextColor(getResources().getColor(android.R.color.black));
                     }
 
                 } else {
-                    // Document doesn't exist (Admin hasn't added data yet)
                     tvWelcomeName.setText("Hi, Student!");
                     tvAttendancePercentage.setText("--%");
-                    Toast.makeText(this, "Profile not found. Contact Admin.", Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Error fetching profile.", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void sendToLogin() {
-        Intent intent = new Intent(this, StudentLoginActivity.class);
+        Intent intent = new Intent(this, StudentLoginActivity.class); // Standardized to StudLoginActivity
         startActivity(intent);
         finish();
     }

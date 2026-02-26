@@ -4,13 +4,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#D88D56"
+    android:background="#4CB5C3"
     android:fitsSystemWindows="true">
 
     <View
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="#FDF8F5"
+        android:background="#F8FAFC"
         app:layout_constraintTop_toBottomOf="@id/header_bg"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
@@ -18,7 +18,7 @@
         android:id="@+id/header_bg"
         android:layout_width="match_parent"
         android:layout_height="65dp"
-        android:background="#D88D56"
+        android:background="#4CB5C3"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
@@ -35,7 +35,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Enter Marks - Select Subject"
+        android:text="My Marks"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="#FFFFFF"
@@ -44,20 +44,24 @@
         app:layout_constraintBottom_toBottomOf="@id/header_bg"
         app:layout_constraintTop_toTopOf="@id/header_bg"/>
 
-    <ScrollView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_subjects"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:paddingTop="16dp"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/header_bg"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <LinearLayout
-            android:id="@+id/container_subjects"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingTop="20dp">
-
-        </LinearLayout>
-    </ScrollView>
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:indeterminateTint="#4CB5C3"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

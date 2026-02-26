@@ -5,12 +5,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F9F9">
+    android:background="#0C7779"
+    android:fitsSystemWindows="true">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#F5F9F9"
+        app:layout_constraintTop_toBottomOf="@id/view_header_bg"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <View
         android:id="@+id/view_header_bg"
         android:layout_width="match_parent"
-        android:layout_height="180dp"
+        android:layout_height="195dp"
         android:background="#0C7779"
         app:layout_constraintTop_toTopOf="parent"/>
 
@@ -23,7 +31,7 @@
         android:textStyle="bold"
         android:textColor="#FFFFFF"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="30dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
@@ -45,9 +53,9 @@
         android:src="@android:drawable/ic_popup_reminder"
         app:tint="#FFFFFF"
         android:layout_marginEnd="24dp"
-        android:layout_marginTop="45dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="@id/tv_header_name"
+        app:layout_constraintBottom_toBottomOf="@id/tv_header_name"/>
 
     <ImageView
         android:id="@+id/btn_logout_icon"
@@ -129,7 +137,8 @@
             android:layout_columnWeight="1"
             android:layout_margin="8dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="3dp">
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="#0C7779">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -141,14 +150,14 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@drawable/ic_check"
-                    app:tint="#0C7779"/>
+                    app:tint="#FFFFFF"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Attendance"
                     android:layout_marginTop="8dp"
                     android:textStyle="bold"
-                    android:textColor="#424242"/>
+                    android:textColor="#FFFFFF"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -159,7 +168,8 @@
             android:layout_columnWeight="1"
             android:layout_margin="8dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="3dp">
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="#0C7779">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -171,14 +181,14 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@android:drawable/ic_menu_edit"
-                    app:tint="#0C7779"/>
+                    app:tint="#FFFFFF"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Marks"
                     android:layout_marginTop="8dp"
                     android:textStyle="bold"
-                    android:textColor="#424242"/>
+                    android:textColor="#FFFFFF"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -189,7 +199,8 @@
             android:layout_columnWeight="1"
             android:layout_margin="8dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="3dp">
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="#0C7779">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -201,14 +212,14 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@android:drawable/ic_menu_agenda"
-                    app:tint="#0C7779"/>
+                    app:tint="#FFFFFF"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Notices"
                     android:layout_marginTop="8dp"
                     android:textStyle="bold"
-                    android:textColor="#424242"/>
+                    android:textColor="#FFFFFF"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -219,7 +230,8 @@
             android:layout_columnWeight="1"
             android:layout_margin="8dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="3dp">
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="#0C7779">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -231,14 +243,14 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@android:drawable/ic_menu_my_calendar"
-                    app:tint="#0C7779"/>
+                    app:tint="#FFFFFF"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Academic Cal"
                     android:layout_marginTop="8dp"
                     android:textStyle="bold"
-                    android:textColor="#424242"/>
+                    android:textColor="#FFFFFF"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </GridLayout>
