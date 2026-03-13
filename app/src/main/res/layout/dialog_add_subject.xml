@@ -65,28 +65,30 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="From (e.g., 09:00)"
+            android:hint="From (e.g., 09:00 AM)"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_marginEnd="8dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_time_from"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="datetime"/>
+                android:focusable="false"
+                android:cursorVisible="false"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="To (e.g., 10:00)"
+            android:hint="To (e.g., 10:00 AM)"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_marginStart="8dp">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_time_to"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="datetime"/>
+                android:focusable="false"
+                android:cursorVisible="false"/>
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
@@ -113,7 +115,8 @@
             android:layout_height="56dp"
             android:layout_weight="1"
             android:text="Save Changes"
-            android:backgroundTint="#D88D56"
+            android:backgroundTint="#2C969E"
+            android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:layout_marginStart="8dp"/>
     </LinearLayout>

@@ -149,7 +149,7 @@
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@drawable/ic_check"
+                    android:src="@drawable/ic_check_attendance"
                     app:tint="#FFFFFF"/>
                 <TextView
                     android:layout_width="wrap_content"
@@ -180,7 +180,7 @@
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@android:drawable/ic_menu_edit"
+                    android:src="@drawable/ic_check_marks"
                     app:tint="#FFFFFF"/>
                 <TextView
                     android:layout_width="wrap_content"
@@ -211,7 +211,7 @@
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@android:drawable/ic_menu_agenda"
+                    android:src="@drawable/ic_notice"
                     app:tint="#FFFFFF"/>
                 <TextView
                     android:layout_width="wrap_content"
@@ -242,15 +242,16 @@
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@android:drawable/ic_menu_my_calendar"
+                    android:src="@drawable/ic_calendar"
                     app:tint="#FFFFFF"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Academic Cal"
+                    android:text="Academic Calendar"
+                    android:textColor="#FFF"
+                    android:textSize="12sp"
                     android:layout_marginTop="8dp"
-                    android:textStyle="bold"
-                    android:textColor="#FFFFFF"/>
+                    android:textStyle="bold"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </GridLayout>

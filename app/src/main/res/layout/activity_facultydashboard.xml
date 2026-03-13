@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#D88D56"
+    android:background="#2C969E"
     android:fitsSystemWindows="true">
 
     <View
@@ -17,16 +17,16 @@
     <View
         android:id="@+id/header_bg"
         android:layout_width="match_parent"
-        android:layout_height="180dp"
-        android:background="#D88D56"
+        android:layout_height="150dp"
+        android:background="#2C969E"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tv_welcome_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hi, Prof. Sharma"
-        android:textSize="26sp"
+        android:text="Hello,\nProf. Sharma"
+        android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="#FFFFFF"
         android:layout_marginTop="30dp"
@@ -63,9 +63,9 @@
         android:text="Quick Actions"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
+        android:textColor="#000000"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="50dp"
         app:layout_constraintTop_toBottomOf="@id/tv_welcome_name"
         app:layout_constraintStart_toStartOf="parent"/>
 
@@ -87,19 +87,20 @@
             android:layout_columnWeight="1"
             android:layout_margin="8dp"
             android:background="@drawable/ripple_select"
-            android:backgroundTint="#F4CBA0"
+            android:backgroundTint="#2C969E"
             android:orientation="vertical"
             android:gravity="center"
             android:elevation="4dp">
             <ImageView
                 android:layout_width="35dp"
                 android:layout_height="35dp"
-                android:src="@drawable/ic_check"/>
+                android:src="@drawable/ic_check"
+                app:tint="#FFF"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Mark Attendance"
-                android:textColor="#000000"
+                android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_marginTop="4dp"/>
@@ -112,20 +113,20 @@
             android:layout_columnWeight="1"
             android:layout_margin="8dp"
             android:background="@drawable/ripple_select"
-            android:backgroundTint="#F4CBA0"
+            android:backgroundTint="#2C969E"
             android:orientation="vertical"
             android:gravity="center"
             android:elevation="4dp">
             <ImageView
                 android:layout_width="35dp"
                 android:layout_height="35dp"
-                android:src="@android:drawable/ic_menu_edit"
-                android:tint="#000000"/>
+                android:src="@drawable/ic_marks"
+                app:tint="#FFF"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Enter Marks"
-                android:textColor="#000000"
+                android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_marginTop="4dp"/>
@@ -163,19 +164,20 @@
             android:layout_columnWeight="1"
             android:layout_margin="8dp"
             android:background="@drawable/ripple_select"
-            android:backgroundTint="#FFE0B2"
+            android:backgroundTint="#2C969E"
             android:orientation="vertical"
             android:gravity="center"
             android:elevation="4dp">
             <ImageView
                 android:layout_width="35dp"
                 android:layout_height="35dp"
-                android:src="@android:drawable/ic_menu_my_calendar"/>
+                android:src="@drawable/ic_timetable"
+                app:tint="#FFF"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Edit Time Table"
-                android:textColor="#000000"
+                android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_marginTop="4dp"/>
@@ -188,19 +190,20 @@
             android:layout_columnWeight="1"
             android:layout_margin="8dp"
             android:background="@drawable/ripple_select"
-            android:backgroundTint="#FFE0B2"
+            android:backgroundTint="#2C969E"
             android:orientation="vertical"
             android:gravity="center"
             android:elevation="4dp">
             <ImageView
                 android:layout_width="35dp"
                 android:layout_height="35dp"
-                android:src="@android:drawable/ic_menu_info_details"/>
+                android:src="@drawable/ic_others"
+                app:tint="#FFF"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Status"
-                android:textColor="#000000"
+                android:text="Other Features"
+                android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_marginTop="4dp"/>
@@ -236,6 +239,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#FFFFFF"
+        app:itemIconTint="#2C969E"
+        app:itemTextColor="#2C969E"
         app:menu="@menu/faculty_bottom_menu"
         app:layout_constraintBottom_toBottomOf="parent"/>
 

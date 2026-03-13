@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#D88D56"
+    android:background="#2C969E"
     android:fitsSystemWindows="true">
 
     <View
@@ -18,7 +18,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="65dp"
-        android:background="#D88D56"
+        android:background="#2C969E"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         app:layout_constraintTop_toTopOf="parent">
@@ -33,7 +33,7 @@
                 android:id="@+id/btn_back"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@android:drawable/ic_menu_revert"
+                android:src="@drawable/ic_back"
                 app:tint="#FFFFFF"/>
 
             <TextView
@@ -54,7 +54,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="#FFF3E0"
+        android:background="#E9F3FF"
         app:layout_constraintTop_toBottomOf="@id/toolbar">
 
         <TextView
@@ -148,7 +148,8 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:text="Submit Marks"
-        android:backgroundTint="#D88D56"
+        android:backgroundTint="#2C969E"
+        android:textColor="#FFFFFF"
         android:textStyle="bold"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"/>

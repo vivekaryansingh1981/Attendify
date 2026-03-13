@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#D88D56"
+    android:background="#2C969E"
     android:fitsSystemWindows="true">
 
     <View
@@ -17,14 +17,14 @@
         android:id="@+id/header_bg"
         android:layout_width="match_parent"
         android:layout_height="65dp"
-        android:background="#D88D56"
+        android:background="#2C969E"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/btn_back"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:src="@android:drawable/ic_menu_revert"
+        android:src="@drawable/ic_back"
         app:tint="#FFFFFF"
         android:layout_marginStart="20dp"
         app:layout_constraintBottom_toBottomOf="@id/header_bg"
@@ -107,7 +107,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:columnCount="5"
-                android:rowCount="5"
+                android:rowCount="8"
                 android:alignmentMode="alignBounds"
                 android:useDefaultMargins="true">
             </GridLayout>
@@ -120,7 +120,8 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:text="Submit Time Table"
-        android:backgroundTint="#D88D56"
+        android:backgroundTint="#2C969E"
+        android:textColor="#FFFFFF"
         android:textStyle="bold"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"/>

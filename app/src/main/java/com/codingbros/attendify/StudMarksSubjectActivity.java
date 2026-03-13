@@ -81,9 +81,18 @@ public class StudMarksSubjectActivity extends AppCompatActivity {
     }
 
     private void onSubjectClick(String subjectName) {
-        // Navigate to the strict student results activity
+        // --- FIXED: Find the abbreviation before sending the Intent ---
+        String subjectAbbr = subjectName; // Default fallback
+        for (Map<String, String> map : subjectList) {
+            if (subjectName.equals(map.get("name"))) {
+                subjectAbbr = map.get("abbr");
+                break;
+            }
+        }
+
         Intent intent = new Intent(this, StudMarksResultActivity.class);
         intent.putExtra("subject_name", subjectName);
+        intent.putExtra("subject_abbr", subjectAbbr); // Pack it!
         startActivity(intent);
     }
 }

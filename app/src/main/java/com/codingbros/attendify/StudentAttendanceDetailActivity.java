@@ -32,6 +32,7 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
 
     private Map<String, String> overallAttendanceMap = new HashMap<>();
     private Map<String, String> currentMonthDisplayMap = new HashMap<>();
+    private Map<String, String> globalHolidaysMap = new HashMap<>();
     private Calendar currentDisplayMonth;
 
     @Override
@@ -39,13 +40,19 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_student_attendance_detail);
 
+        // --- FIXED: Get both name and abbreviation ---
         subjectName = getIntent().getStringExtra("subject_name");
+        String subjectAbbr = getIntent().getStringExtra("subject_abbr");
+
+        if (subjectAbbr == null || subjectAbbr.trim().isEmpty()) {
+            subjectAbbr = subjectName;
+        }
+
         db = FirebaseFirestore.getInstance();
         studentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         currentDisplayMonth = Calendar.getInstance();
 
-        // Bind UI Elements
         tvTitle = findViewById(R.id.tv_subject_title);
         tvTotal = findViewById(R.id.tv_total_lectures);
         tvPresent = findViewById(R.id.tv_present_count);
@@ -58,13 +65,11 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
         btnNextMonth = findViewById(R.id.btn_next_month);
 
         if (subjectName != null) {
-            tvTitle.setText(subjectName);
+            tvTitle.setText(subjectAbbr); // --- CHANGED to Abbreviation ---
         }
 
-        // Setup Calendar Grid
         recyclerCalendar.setLayoutManager(new GridLayoutManager(this, 7));
 
-        // --- BUTTON CLICK LISTENERS ---
         btnBack.setOnClickListener(v -> finish());
 
         btnPrevMonth.setOnClickListener(v -> {
@@ -77,7 +82,6 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
             updateCalendarForMonth();
         });
 
-        // Fetch data from Firebase
         fetchAttendanceData();
     }
 
@@ -120,7 +124,13 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
                     tvPresent.setText(String.valueOf(present));
                     tvAbsent.setText(String.valueOf(absent));
 
-                    updateCalendarForMonth();
+                    db.collection("holidays").get().addOnSuccessListener(holidaySnaps -> {
+                        globalHolidaysMap.clear();
+                        for (QueryDocumentSnapshot hDoc : holidaySnaps) {
+                            globalHolidaysMap.put(hDoc.getId(), "Holiday");
+                        }
+                        updateCalendarForMonth();
+                    }).addOnFailureListener(e -> updateCalendarForMonth());
 
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Error fetching records", Toast.LENGTH_SHORT).show());
@@ -129,7 +139,6 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
     private void updateCalendarForMonth() {
         currentMonthDisplayMap.clear();
 
-        // IMPORTANT: Make sure your Firebase dates are exactly in "dd-MM-yyyy" format (e.g., "05-03-2026")
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
 
         for (Map.Entry<String, String> entry : overallAttendanceMap.entrySet()) {
@@ -146,6 +155,20 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        for (Map.Entry<String, String> entry : globalHolidaysMap.entrySet()) {
+            try {
+                Calendar recordCal = Calendar.getInstance();
+                recordCal.setTime(sdf.parse(entry.getKey()));
+
+                if (recordCal.get(Calendar.MONTH) == currentDisplayMonth.get(Calendar.MONTH) &&
+                        recordCal.get(Calendar.YEAR) == currentDisplayMonth.get(Calendar.YEAR)) {
+
+                    String day = String.valueOf(recordCal.get(Calendar.DAY_OF_MONTH));
+                    currentMonthDisplayMap.put(day, "Holiday");
+                }
+            } catch (Exception e) { e.printStackTrace(); }
         }
 
         setupCalendarAdapter();
@@ -171,7 +194,6 @@ public class StudentAttendanceDetailActivity extends AppCompatActivity {
             days.add(String.valueOf(i));
         }
 
-        // We pass a NEW HashMap clone to force the adapter to realize the data has changed
         CalendarAdapter adapter = new CalendarAdapter(days, new HashMap<>(currentMonthDisplayMap));
         recyclerCalendar.setAdapter(adapter);
     }

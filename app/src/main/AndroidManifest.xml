@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
         android:allowBackup="true"
@@ -27,7 +29,7 @@
         <activity android:name=".NoticeBoardActivity" />
         <activity android:name=".AcademicCalendarActivity" />
         <activity android:name=".NotificationActivity"/>
-        <activity android:name=".StatusActivity"/>
+        <activity android:name=".FacultyOtherFeaturesActivity"/>
         <activity android:name=".StudTimetableActivity" />
         <activity android:name=".FacultyLoginActivity"/>
         <activity android:name=".FacultydashboardActivity"/>
@@ -48,7 +50,23 @@
         <activity android:name=".StudAttendanceDetailActivity" />
         <activity android:name=".StudMarksSubjectActivity" />
         <activity android:name=".StudMarksResultActivity" />
-        <activity android:name=".EnterMarksActivity"/>
+        <activity android:name=".TodaysClassesActivity" />
+        <activity android:name=".FacultyAvailabilityActivity"/>
+        <activity android:name=".FacultyDeclareHolidayActivity"/>
+        <activity android:name=".FacultySendNoticeActivity"/>
+        <activity android:name=".FacultyManageNoticesActivity"/>
+        <activity android:name=".FacultyCalendarEditorActivity" />
+        <activity android:name=".FacultyPresentSubjectsActivity" />
+        <activity android:name=".FacultyPresentListActivity"/>
+        <receiver android:name=".ClassAlertReceiver" android:exported="false" />
+
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
     </application>
 </manifest>

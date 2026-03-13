@@ -16,7 +16,10 @@ import androidx.cardview.widget.CardView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.Map;
 
 public class ParentDashboardActivity extends AppCompatActivity {
 
@@ -39,6 +42,7 @@ public class ParentDashboardActivity extends AppCompatActivity {
         // 1. Init Firebase
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+        com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("all_devices");
 
         // 2. Link Header Views
         tvHeaderName = findViewById(R.id.tv_header_name);
@@ -59,7 +63,9 @@ public class ParentDashboardActivity extends AppCompatActivity {
         // 5. Fetch Data
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            fetchStudentDetails(currentUser.getUid());
+            String studentUid = currentUser.getUid();
+            fetchStudentName(studentUid);
+            calculateOverallAttendance(studentUid); // NEW: Calculate Real Attendance
         }
 
         // 6. Logout Logic
@@ -130,11 +136,11 @@ public class ParentDashboardActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void fetchStudentDetails(String studentUid) {
+    // --- UPDATED: Only fetches the name from the user profile now ---
+    private void fetchStudentName(String studentUid) {
         db.collection("users").document(studentUid).get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
-                        // 1. Name Logic
                         String fullName = document.getString("name");
                         if (fullName != null && !fullName.isEmpty()) {
                             String firstName = fullName.split(" ")[0];
@@ -142,31 +148,6 @@ public class ParentDashboardActivity extends AppCompatActivity {
                         } else {
                             tvHeaderName.setText("Student's Academics");
                         }
-
-                        // 2. Calculate Attendance Percentage
-                        long totalClasses = 0;
-                        long attendedClasses = 0;
-
-                        if (document.contains("total_classes")) {
-                            Object totalObj = document.get("total_classes");
-                            if (totalObj instanceof Number) totalClasses = ((Number) totalObj).longValue();
-                            else if (totalObj instanceof String) totalClasses = Long.parseLong((String) totalObj);
-                        }
-
-                        if (document.contains("attended_classes")) {
-                            Object attendedObj = document.get("attended_classes");
-                            if (attendedObj instanceof Number) attendedClasses = ((Number) attendedObj).longValue();
-                            else if (attendedObj instanceof String) attendedClasses = Long.parseLong((String) attendedObj);
-                        }
-
-                        int calculatedPercentage = 0;
-                        if (totalClasses > 0) {
-                            calculatedPercentage = (int) ((attendedClasses * 100) / totalClasses);
-                        }
-
-                        progressAttendance.setProgress(calculatedPercentage);
-                        tvAttendancePercent.setText(calculatedPercentage + "%");
-
                     } else {
                         Toast.makeText(this, "Student profile not found", Toast.LENGTH_SHORT).show();
                     }
@@ -174,5 +155,48 @@ public class ParentDashboardActivity extends AppCompatActivity {
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Error fetching data: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
+    }
+
+    // --- NEW: Calculates REAL Overall Attendance directly from the Faculty's records ---
+    private void calculateOverallAttendance(String studentUid) {
+        db.collection("attendance").get().addOnSuccessListener(queryDocumentSnapshots -> {
+            long totalClasses = 0;
+            long attendedClasses = 0;
+
+            for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                if (doc.contains("attendanceData")) {
+                    Map<String, String> attData = (Map<String, String>) doc.get("attendanceData");
+
+                    // Check if this student is part of this specific class record
+                    if (attData != null && attData.containsKey(studentUid)) {
+                        totalClasses++; // Found a class the student is enrolled in
+
+                        String status = attData.get(studentUid);
+                        if ("Present".equalsIgnoreCase(status)) {
+                            attendedClasses++; // Student was present
+                        }
+                    }
+                }
+            }
+
+            int calculatedPercentage = 0;
+            if (totalClasses > 0) {
+                calculatedPercentage = (int) ((attendedClasses * 100) / totalClasses);
+            }
+
+            // Update UI
+            progressAttendance.setProgress(calculatedPercentage);
+            tvAttendancePercent.setText(calculatedPercentage + "%");
+
+            if (calculatedPercentage < 75 && totalClasses > 0) {
+                tvAttendancePercent.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            } else {
+                tvAttendancePercent.setTextColor(android.graphics.Color.parseColor("#0C7779")); // Standard parent teal
+            }
+
+        }).addOnFailureListener(e -> {
+            tvAttendancePercent.setText("--%");
+            Toast.makeText(this, "Error calculating attendance.", Toast.LENGTH_SHORT).show();
+        });
     }
 }

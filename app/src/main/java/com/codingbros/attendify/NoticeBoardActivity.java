@@ -45,51 +45,21 @@ public class NoticeBoardActivity extends AppCompatActivity {
         adapter = new NoticeAdapter(noticeList);
         recyclerView.setAdapter(adapter);
 
-        // Load Default Hardcoded Notices First
-        loadDefaultNotices();
-
-        // Optional: Fetch dynamic notices from Firebase to add to the list
-        // fetchNotices();
-    }
-
-    private void loadDefaultNotices() {
-        noticeList.clear();
-
-        // 1. Default Notice: Vijay Trophy 2026
-        Map<String, String> notice1 = new HashMap<>();
-        notice1.put("title", "Vijay Trophy 2026 | Official Registration");
-        notice1.put("desc", "Google Form Link: https://forms.gle/hk61empVbZ72cAQw6\n\n" +
-                "Guidelines:\n" +
-                "• Single Entry: Fill the form once only.\n" +
-                "• Limit: Max 2 sports per student.\n" +
-                "• Exception: Pharmacy, Arch & Design, Hospitality, and Law students can play up to 3 sports.\n" +
-                "• Merged Teams: School of Architecture and Design will merge into unified teams.\n" +
-                "• Strict Roster: No unauthorized substitution of team members.\n\n" +
-                "Deadline: 24th February 2026.");
-        notice1.put("author", "Sports Department");
-        notice1.put("date", "19 Feb 2026");
-        noticeList.add(notice1);
-
-        // 2. Default Notice: Parent Meeting
-        Map<String, String> notice2 = new HashMap<>();
-        notice2.put("title", "Parent-Teacher Meeting (PTM)");
-        notice2.put("desc", "A mandatory Parent-Teacher Meeting is scheduled for the upcoming weekend. The agenda includes discussion on academic progress, overall attendance, and preparation strategies for the upcoming Semester Exams. We kindly request all parents to attend.");
-        notice2.put("author", "Administration");
-        notice2.put("date", "15 Feb 2026");
-        noticeList.add(notice2);
-
-        adapter.notifyDataSetChanged();
-        tvNoNotices.setVisibility(View.GONE);
+        // Fetch dynamic notices directly from Firebase
+        fetchNotices();
     }
 
     private void fetchNotices() {
-        // Assuming faculty adds notices to a collection named "notices"
+        // Fetch notices from the "notices" collection, ordered by newest first
         db.collection("notices")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (queryDocumentSnapshots.isEmpty() && noticeList.isEmpty()) {
+                    noticeList.clear(); // Clear list to prevent duplicates on reload
+
+                    if (queryDocumentSnapshots.isEmpty()) {
                         tvNoNotices.setVisibility(View.VISIBLE);
+                        adapter.notifyDataSetChanged();
                         return;
                     }
 
@@ -100,7 +70,7 @@ public class NoticeBoardActivity extends AppCompatActivity {
                         String desc = doc.getString("description");
                         String author = doc.getString("author");
 
-                        // Handle Date formatting
+                        // Handle Date formatting safely
                         Long timestamp = doc.getLong("timestamp");
                         String dateStr = (timestamp != null) ? sdf.format(new Date(timestamp)) : "Recent";
 

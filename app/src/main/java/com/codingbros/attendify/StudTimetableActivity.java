@@ -7,12 +7,10 @@ import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Map;
@@ -23,15 +21,15 @@ public class StudTimetableActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private FirebaseFirestore db;
 
-    // Array to hold the 25 read-only text views (5 days * 5 slots)
-    private TextView[] gridCells = new TextView[25];
+    // CHANGED: Array updated to hold 40 cells (5 days * 8 slots)
+    private TextView[] gridCells = new TextView[40];
     private final String[] DAYS = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
-    private final int SLOTS_PER_DAY = 5;
+    private final int SLOTS_PER_DAY = 8; // CHANGED
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_stud_timetable); // Matches your Grid XML
+        setContentView(R.layout.activity_stud_timetable);
 
         db = FirebaseFirestore.getInstance();
         gridTimetable = findViewById(R.id.grid_timetable);
@@ -40,17 +38,17 @@ public class StudTimetableActivity extends AppCompatActivity {
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
 
         setupReadOnlyGrid();
+
         fetchAllTimetables();
     }
 
     private void setupReadOnlyGrid() {
         gridTimetable.removeAllViews();
 
-        for (int i = 0; i < SLOTS_PER_DAY; i++) { // Rows (Slots)
-            for (int j = 0; j < DAYS.length; j++) { // Columns (Days)
+        for (int i = 0; i < SLOTS_PER_DAY; i++) {
+            for (int j = 0; j < DAYS.length; j++) {
                 TextView textView = new TextView(this);
 
-                // Distribute evenly across the grid
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams();
                 params.width = 0;
                 params.height = GridLayout.LayoutParams.WRAP_CONTENT;
@@ -59,15 +57,13 @@ public class StudTimetableActivity extends AppCompatActivity {
                 params.setMargins(4, 4, 4, 4);
                 textView.setLayoutParams(params);
 
-                // Styling for the read-only student cell
                 textView.setGravity(Gravity.CENTER);
                 textView.setPadding(4, 24, 4, 24);
-                textView.setBackgroundColor(Color.parseColor("#E0F7FA")); // Light Teal Box
-                textView.setTextColor(Color.parseColor("#006064")); // Dark Teal Text
+                textView.setBackgroundColor(Color.parseColor("#E0F7FA"));
+                textView.setTextColor(Color.parseColor("#006064"));
                 textView.setTextSize(11f);
-                textView.setText("-"); // Default empty state
+                textView.setText("-");
 
-                // Calculate the exact index (0 to 24)
                 int index = (i * DAYS.length) + j;
                 gridCells[index] = textView;
 
@@ -79,65 +75,58 @@ public class StudTimetableActivity extends AppCompatActivity {
     private void fetchAllTimetables() {
         if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
 
-        // 1. Fetch all faculty members
-        db.collection("faculty").get().addOnSuccessListener(facultySnaps -> {
+        final int[] completedQueries = {0};
 
-            if (facultySnaps.isEmpty()) {
-                if (progressBar != null) progressBar.setVisibility(View.GONE);
-                return;
-            }
+        for (int d = 0; d < DAYS.length; d++) {
+            String day = DAYS[d];
+            final int dayIndex = d;
 
-            int totalFaculty = facultySnaps.size();
-            final int[] completedQueries = {0};
+            db.collection("timetable").document(day).get()
+                    .addOnSuccessListener(daySnap -> {
+                        if (daySnap.exists()) {
+                            for (int slotIndex = 0; slotIndex < SLOTS_PER_DAY; slotIndex++) {
 
-            for (DocumentSnapshot facultyDoc : facultySnaps) {
+                                if (daySnap.contains("slot_" + slotIndex)) {
+                                    Map<String, String> slotData = (Map<String, String>) daySnap.get("slot_" + slotIndex);
 
-                // 2. Loop through Mon-Fri for each faculty
-                for (int d = 0; d < DAYS.length; d++) {
-                    String day = DAYS[d];
-                    final int dayIndex = d;
+                                    if (slotData != null) {
+                                        String abbr = slotData.get("subject_abbr");
+                                        String from = slotData.get("time_from");
+                                        String to = slotData.get("time_to");
+                                        String isBreak = slotData.get("is_break"); // Detect break
 
-                    facultyDoc.getReference().collection("timetable").document(day).get()
-                            .addOnSuccessListener(daySnap -> {
+                                        int cellIndex = (slotIndex * DAYS.length) + dayIndex;
 
-                                if (daySnap.exists()) {
-                                    // 3. Check slots 0 to 4
-                                    for (int slotIndex = 0; slotIndex < SLOTS_PER_DAY; slotIndex++) {
-
-                                        if (daySnap.contains("slot_" + slotIndex)) {
-                                            Map<String, String> slotData = (Map<String, String>) daySnap.get("slot_" + slotIndex);
-
-                                            if (slotData != null) {
-                                                String abbr = slotData.get("subject_abbr");
-                                                String from = slotData.get("time_from");
-                                                String to = slotData.get("time_to");
-
-                                                // Format text nicely for the grid
+                                        if (gridCells[cellIndex] != null) {
+                                            // --- NEW: Custom Styling for Breaks vs Normal Classes ---
+                                            if ("true".equals(isBreak)) {
+                                                String display = "☕ " + (abbr != null ? abbr.toUpperCase() : "BREAK") + "\n" + from + "-" + to;
+                                                gridCells[cellIndex].setText(display);
+                                                gridCells[cellIndex].setTextColor(Color.parseColor("#D84315")); // Deep Orange
+                                                gridCells[cellIndex].setBackgroundColor(Color.parseColor("#FFCCBC")); // Light Orange background
+                                            } else {
                                                 String display = abbr + "\n" + from + "-" + to;
-
-                                                // Locate the exact cell index for this day and slot
-                                                int cellIndex = (slotIndex * DAYS.length) + dayIndex;
-
-                                                // Update the UI
                                                 gridCells[cellIndex].setText(display);
                                                 gridCells[cellIndex].setTextColor(Color.BLACK);
-                                                gridCells[cellIndex].setBackgroundColor(Color.parseColor("#B2EBF2")); // Slightly darker teal when active
+                                                gridCells[cellIndex].setBackgroundColor(Color.parseColor("#B2EBF2"));
                                             }
                                         }
                                     }
                                 }
-                            });
-                }
+                            }
+                        }
 
-                completedQueries[0]++;
-                if (completedQueries[0] == totalFaculty) {
-                    if (progressBar != null) progressBar.setVisibility(View.GONE);
-                }
-            }
+                        completedQueries[0]++;
+                        if (completedQueries[0] == DAYS.length) {
+                            if (progressBar != null) progressBar.setVisibility(View.GONE);
+                        }
 
-        }).addOnFailureListener(e -> {
-            if (progressBar != null) progressBar.setVisibility(View.GONE);
-            Toast.makeText(this, "Error fetching timetables", Toast.LENGTH_SHORT).show();
-        });
+                    }).addOnFailureListener(e -> {
+                        completedQueries[0]++;
+                        if (completedQueries[0] == DAYS.length) {
+                            if (progressBar != null) progressBar.setVisibility(View.GONE);
+                        }
+                    });
+        }
     }
 }

@@ -20,7 +20,7 @@
         <View
             android:layout_width="6dp"
             android:layout_height="40dp"
-            android:background="#000000"
+            android:background="#2C969E"
             android:layout_marginEnd="16dp"/>
 
         <LinearLayout
@@ -30,19 +30,19 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tv_subject_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Mathematics"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#3E2723"/>
-
-            <TextView
                 android:id="@+id/tv_subject_abbr"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="MATH"
+                android:textSize="18sp"
+                android:textColor="#000000"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/tv_subject_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mathematics"
                 android:textSize="14sp"
                 android:textColor="#8D6E63"
                 android:layout_marginTop="2dp"/>
@@ -66,7 +66,7 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:text="0/0 Classes Conducted"
+                        android:text="0 Classes Conducted"
                         android:textSize="12sp"
                         android:textColor="#555555"/>
 
@@ -75,7 +75,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0%"
-                        android:textSize="18sp"  android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
                         android:textColor="#0C7779"/>
                 </LinearLayout>
 
@@ -94,7 +95,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/outline_arrow_forward_ios_24"
-            app:tint="#D88D56"
+            app:tint="#2C969E"
             android:rotation="0"/>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

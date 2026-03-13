@@ -25,7 +25,7 @@ public class StudMarksResultActivity extends AppCompatActivity {
     private TextView tvTitle, tvNoData;
     private FirebaseFirestore db;
     private String subjectName, studUid;
-    private ExamResultAdapter adapter; // Using the ExamResultAdapter you already made
+    private ExamResultAdapter adapter;
     private List<Map<String, String>> resultList = new ArrayList<>();
 
     @Override
@@ -33,7 +33,13 @@ public class StudMarksResultActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_studmarks_result);
 
+        // --- FIXED: Get both name and abbreviation ---
         subjectName = getIntent().getStringExtra("subject_name");
+        String subjectAbbr = getIntent().getStringExtra("subject_abbr");
+
+        if (subjectAbbr == null || subjectAbbr.trim().isEmpty()) {
+            subjectAbbr = subjectName;
+        }
 
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             studUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -48,7 +54,7 @@ public class StudMarksResultActivity extends AppCompatActivity {
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
 
         if (subjectName != null) {
-            tvTitle.setText(subjectName + " Results");
+            tvTitle.setText(subjectAbbr + " Results"); // --- CHANGED to Abbreviation ---
         }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -61,7 +67,6 @@ public class StudMarksResultActivity extends AppCompatActivity {
     private void fetchStudentMarks() {
         if (studUid == null) return;
 
-        // Query the marks collection for this specific subject
         db.collection("marks")
                 .whereEqualTo("subject", subjectName)
                 .get()
@@ -74,7 +79,6 @@ public class StudMarksResultActivity extends AppCompatActivity {
                         if (data.containsKey("marks_data")) {
                             Map<String, String> marksMap = (Map<String, String>) data.get("marks_data");
 
-                            // Find the specific student's UID in the marks_data map
                             if (marksMap != null && marksMap.containsKey(studUid)) {
                                 String obtained = marksMap.get(studUid);
                                 String total = (String) data.get("total_marks");

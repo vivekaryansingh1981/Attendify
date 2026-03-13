@@ -30,25 +30,26 @@ public class StudAttendanceDetailActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private String subjectName, studUid;
 
-    // Track the currently displayed month
     private Calendar displayCalendar = Calendar.getInstance();
 
-    // Cache ALL records to avoid re-fetching when changing months
-    // Key = docId (e.g. 24-02-2026_Maths), Value = Status
     private Map<String, String> allAttendanceRecords = new HashMap<>();
-
-    // Map for the specific month being viewed
     private Map<String, String> currentMonthStatusMap = new HashMap<>();
+    private Map<String, String> globalHolidaysMap = new HashMap<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_studattendance_detail);
 
-        // --- FIX FOR THE WHITE STATUS BAR GAP ---
         getWindow().setStatusBarColor(android.graphics.Color.parseColor("#4CB5C3"));
 
+        // --- FIXED: Get both name and abbreviation ---
         subjectName = getIntent().getStringExtra("subject_name");
+        String subjectAbbr = getIntent().getStringExtra("subject_abbr");
+
+        if (subjectAbbr == null || subjectAbbr.trim().isEmpty()) {
+            subjectAbbr = subjectName;
+        }
 
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             studUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -70,11 +71,10 @@ public class StudAttendanceDetailActivity extends AppCompatActivity {
         recyclerCalendar.setLayoutManager(new GridLayoutManager(this, 7));
 
         if (subjectName != null) {
-            tvTitle.setText(subjectName);
+            tvTitle.setText(subjectAbbr); // --- CHANGED to Abbreviation ---
             fetchAttendanceRecords();
         }
 
-        // Setup Next and Previous Month click listeners
         btnPrevMonth.setOnClickListener(v -> {
             displayCalendar.add(Calendar.MONTH, -1);
             updateCalendarView();
@@ -95,21 +95,25 @@ public class StudAttendanceDetailActivity extends AppCompatActivity {
                     allAttendanceRecords.clear();
 
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        String docId = document.getId(); // e.g., "24-02-2026_Mathematics"
+                        String docId = document.getId();
 
                         if (document.contains("attendanceData")) {
                             Map<String, String> attendanceData = (Map<String, String>) document.get("attendanceData");
 
                             if (attendanceData != null && attendanceData.containsKey(studUid)) {
                                 String status = attendanceData.get(studUid);
-                                // Save all records to cache
                                 allAttendanceRecords.put(docId, status);
                             }
                         }
                     }
 
-                    // Render the initial calendar for the current month
-                    updateCalendarView();
+                    db.collection("holidays").get().addOnSuccessListener(holidaySnaps -> {
+                        globalHolidaysMap.clear();
+                        for (QueryDocumentSnapshot hDoc : holidaySnaps) {
+                            globalHolidaysMap.put(hDoc.getId(), "Holiday");
+                        }
+                        updateCalendarView();
+                    }).addOnFailureListener(e -> updateCalendarView());
 
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Error fetching records", Toast.LENGTH_SHORT).show());
@@ -122,15 +126,12 @@ public class StudAttendanceDetailActivity extends AppCompatActivity {
 
         currentMonthStatusMap.clear();
 
-        // Format target month/year based on what the user is currently viewing
         String targetMonth = String.format(Locale.getDefault(), "%02d", displayCalendar.get(Calendar.MONTH) + 1);
         String targetYear = String.valueOf(displayCalendar.get(Calendar.YEAR));
 
-        // Update the Month Title TextView
         SimpleDateFormat monthDate = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
         tvMonthYear.setText(monthDate.format(displayCalendar.getTime()));
 
-        // Filter the cached records to calculate stats for the viewed month
         for (Map.Entry<String, String> entry : allAttendanceRecords.entrySet()) {
             String docId = entry.getKey();
             String status = entry.getValue();
@@ -146,7 +147,6 @@ public class StudAttendanceDetailActivity extends AppCompatActivity {
                     dayStr = dayStr.substring(1);
                 }
 
-                // If the record matches the month the user is looking at
                 if (monthStr.equals(targetMonth) && yearStr.equals(targetYear)) {
                     total++;
                     if ("Present".equalsIgnoreCase(status)) {
@@ -161,12 +161,25 @@ public class StudAttendanceDetailActivity extends AppCompatActivity {
             }
         }
 
-        // Update UI Stats for the viewed month
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+        for (Map.Entry<String, String> entry : globalHolidaysMap.entrySet()) {
+            try {
+                Calendar recordCal = Calendar.getInstance();
+                recordCal.setTime(sdf.parse(entry.getKey()));
+
+                if (recordCal.get(Calendar.MONTH) == displayCalendar.get(Calendar.MONTH) &&
+                        recordCal.get(Calendar.YEAR) == displayCalendar.get(Calendar.YEAR)) {
+
+                    String day = String.valueOf(recordCal.get(Calendar.DAY_OF_MONTH));
+                    currentMonthStatusMap.put(day, "Holiday");
+                }
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+
         tvTotal.setText(String.valueOf(total));
         tvPresent.setText(String.valueOf(present));
         tvAbsent.setText(String.valueOf(absent));
 
-        // Generate the exact days for the RecyclerView grid
         List<String> days = new ArrayList<>();
         Calendar cal = (Calendar) displayCalendar.clone();
         cal.set(Calendar.DAY_OF_MONTH, 1);
@@ -174,7 +187,6 @@ public class StudAttendanceDetailActivity extends AppCompatActivity {
         int maxDays = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
         int startDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
 
-        // Blank spaces before the 1st
         for (int i = 0; i < startDayOfWeek; i++) {
             days.add("");
         }
@@ -183,7 +195,6 @@ public class StudAttendanceDetailActivity extends AppCompatActivity {
             days.add(String.valueOf(i));
         }
 
-        // Apply to Adapter
         CalendarAdapter adapter = new CalendarAdapter(days, currentMonthStatusMap);
         recyclerCalendar.setAdapter(adapter);
     }

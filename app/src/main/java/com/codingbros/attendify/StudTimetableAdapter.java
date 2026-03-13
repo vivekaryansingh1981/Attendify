@@ -1,5 +1,6 @@
 package com.codingbros.attendify;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +21,7 @@ public class StudTimetableAdapter extends RecyclerView.Adapter<StudTimetableAdap
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_stud_timetable, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_stud_classes, parent, false);
         return new ViewHolder(view);
     }
 
@@ -30,18 +31,28 @@ public class StudTimetableAdapter extends RecyclerView.Adapter<StudTimetableAdap
 
         String timeFrom = cls.containsKey("time_from") ? cls.get("time_from") : "";
         String timeTo = cls.containsKey("time_to") ? cls.get("time_to") : "";
+        String facultyName = cls.get("teacher_name");
+        String isBreak = cls.get("is_break"); // Check if it's a break
 
         holder.tvTime.setText(timeFrom + " - " + timeTo);
-        holder.tvSubject.setText(cls.get("subject_name"));
 
-        // Match the exact key from EditTimetableActivity ("teacher_name")
-        String facultyName = cls.get("teacher_name");
-
-        if (facultyName != null && !facultyName.isEmpty()) {
-            holder.tvTeacher.setText("Prof. " + facultyName);
-            holder.tvTeacher.setVisibility(View.VISIBLE);
+        // --- NEW: Adapt the View depending on if it's a Break or a Lecture ---
+        if ("true".equals(isBreak)) {
+            // It's a break
+            holder.tvSubject.setText(cls.get("subject_name"));
+            holder.tvSubject.setTextColor(Color.parseColor("#D84315")); // Deep Orange
+            holder.tvTeacher.setVisibility(View.GONE); // No teacher for a break
         } else {
-            holder.tvTeacher.setVisibility(View.GONE);
+            // Normal class
+            holder.tvSubject.setText(cls.get("subject_name"));
+            holder.tvSubject.setTextColor(Color.parseColor("#333333")); // Reset to default Dark Gray
+
+            if (facultyName != null && !facultyName.isEmpty() && !facultyName.equals("-")) {
+                holder.tvTeacher.setText("Prof. " + facultyName);
+                holder.tvTeacher.setVisibility(View.VISIBLE);
+            } else {
+                holder.tvTeacher.setVisibility(View.GONE);
+            }
         }
     }
 

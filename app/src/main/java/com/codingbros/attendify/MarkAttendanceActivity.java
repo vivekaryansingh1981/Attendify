@@ -18,6 +18,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +46,12 @@ public class MarkAttendanceActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
         btnAddSubject.setOnClickListener(v -> showAddSubjectDialog());
 
+        loadSubjects();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         loadSubjects();
     }
 
@@ -113,7 +120,6 @@ public class MarkAttendanceActivity extends AppCompatActivity {
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             String name = document.getString("name");
                             String abbr = document.getString("abbr");
-                            // Pass the Document ID so we know what to delete
                             addSubjectView(name, abbr, document.getId());
                         }
                     }
@@ -125,45 +131,117 @@ public class MarkAttendanceActivity extends AppCompatActivity {
 
         TextView tvName = view.findViewById(R.id.tv_subject_name);
         TextView tvAbbr = view.findViewById(R.id.tv_subject_abbr);
+        LinearLayout layoutStats = view.findViewById(R.id.layout_attendance_stats);
+        TextView tvConducted = view.findViewById(R.id.tv_classes_conducted);
+        TextView tvPercentage = view.findViewById(R.id.tv_percentage);
+        View progressAttendance = view.findViewById(R.id.progress_attendance);
 
         tvName.setText(name);
         tvAbbr.setText(abbr);
 
-        // Regular Click: Open Attendance (To be implemented)
+        db.collection("attendance").whereEqualTo("subject", name).get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    int count = queryDocumentSnapshots.size();
+                    tvConducted.setText(count + " Classes Conducted");
+
+                    layoutStats.setVisibility(View.VISIBLE);
+                    tvPercentage.setVisibility(View.GONE);
+                    progressAttendance.setVisibility(View.GONE);
+                });
+
         view.setOnClickListener(v -> {
             Intent intent = new Intent(this, StudentListActivity.class);
-            intent.putExtra("subject_name", name); // Pass the subject name
+            intent.putExtra("subject_name", name);
+            intent.putExtra("subject_abbr", abbr);
             startActivity(intent);
-            Toast.makeText(this, "Clicked: " + name, Toast.LENGTH_SHORT).show();
         });
 
-        // --- NEW: LONG PRESS TO DELETE ---
         view.setOnLongClickListener(v -> {
             new AlertDialog.Builder(this)
                     .setTitle("Delete Subject")
-                    .setMessage("Are you sure you want to delete " + name + "?")
+                    .setMessage("Are you sure you want to delete " + name + "?\n\nWARNING: This will permanently wipe all Attendance and Marks history for this subject!")
                     .setPositiveButton("Delete", (dialog, which) -> {
-                        deleteSubject(docId);
+                        deleteSubject(docId, name);
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
-            return true; // Return true to indicate the click was handled
+            return true;
         });
 
         containerSubjects.addView(view);
     }
 
-    // Helper method to delete from Firestore
-    private void deleteSubject(String docId) {
+    // --- STEP 1: Delete Subject ---
+    private void deleteSubject(String docId, String subjectName) {
         db.collection("faculty").document(facultyUid)
                 .collection("subjects").document(docId)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Subject Deleted", Toast.LENGTH_SHORT).show();
-                    loadSubjects(); // Refresh list to remove the item
+                    // Instantly trigger Step 2
+                    deleteAssociatedAttendance(subjectName);
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Error deleting subject", Toast.LENGTH_SHORT).show()
                 );
+    }
+
+    // --- STEP 2: Delete Attendance ---
+    private void deleteAssociatedAttendance(String subjectName) {
+        db.collection("attendance").whereEqualTo("subject", subjectName).get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        // No attendance found, trigger Step 3
+                        deleteAssociatedMarks(subjectName);
+                        return;
+                    }
+
+                    WriteBatch batch = db.batch();
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        batch.delete(doc.getReference());
+                    }
+
+                    batch.commit().addOnSuccessListener(aVoid -> {
+                        // Attendance deleted, trigger Step 3
+                        deleteAssociatedMarks(subjectName);
+                    }).addOnFailureListener(e -> {
+                        Toast.makeText(this, "Failed to clear some attendance records.", Toast.LENGTH_SHORT).show();
+                        deleteAssociatedMarks(subjectName); // Still try to delete marks anyway!
+                    });
+
+                }).addOnFailureListener(e -> {
+                    // Try to delete marks even if attendance query fails
+                    deleteAssociatedMarks(subjectName);
+                });
+    }
+
+    // --- STEP 3: Delete Marks ---
+    private void deleteAssociatedMarks(String subjectName) {
+        db.collection("marks").whereEqualTo("subject", subjectName).get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        Toast.makeText(this, "Subject and Attendance completely wiped!", Toast.LENGTH_SHORT).show();
+                        loadSubjects();
+                        return;
+                    }
+
+                    WriteBatch batch = db.batch();
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        batch.delete(doc.getReference());
+                    }
+
+                    batch.commit().addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "Subject, Attendance, and Marks completely wiped!", Toast.LENGTH_LONG).show();
+                        loadSubjects(); // Refresh the screen
+                    }).addOnFailureListener(e -> {
+                        Toast.makeText(this, "Subject deleted, but failed to clear some marks.", Toast.LENGTH_SHORT).show();
+                        loadSubjects();
+                    });
+
+                }).addOnFailureListener(e -> {
+                    Toast.makeText(this, "Subject deleted (Marks cleanup failed)", Toast.LENGTH_SHORT).show();
+                    loadSubjects();
+                });
     }
 }

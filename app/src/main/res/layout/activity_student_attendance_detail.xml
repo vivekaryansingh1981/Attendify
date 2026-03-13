@@ -22,7 +22,7 @@
                 android:id="@+id/btn_back"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@android:drawable/ic_menu_revert"
+                android:src="@drawable/ic_back"
                 app:tint="#FFFFFF"
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="20dp"/>

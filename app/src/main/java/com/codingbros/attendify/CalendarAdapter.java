@@ -55,6 +55,11 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.ViewHo
                 holder.container.setBackgroundResource(R.drawable.bg_cal_box_absent);
                 holder.tvDay.setTextColor(Color.WHITE);
             }
+            else if ("Holiday".equals(status)) {
+                // NEW: Yellow Box, Dark Text for readability
+                holder.container.setBackgroundResource(R.drawable.bg_cal_box_holiday);
+                holder.tvDay.setTextColor(Color.parseColor("#333333"));
+            }
         } else {
             // Default: White Box, Black Text
             holder.container.setBackgroundResource(R.drawable.bg_cal_box_default);

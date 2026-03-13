@@ -55,7 +55,15 @@ public class StudentMarksActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_student_marks);
 
+        // --- FIXED: Get BOTH the full name (for DB) and abbreviation (for UI) ---
         subjectName = getIntent().getStringExtra("subject_name");
+        String subjectAbbr = getIntent().getStringExtra("subject_abbr");
+
+        // Fallback in case abbreviation is null
+        if (subjectAbbr == null || subjectAbbr.trim().isEmpty()) {
+            subjectAbbr = subjectName;
+        }
+
         db = FirebaseFirestore.getInstance();
 
         toolbar = findViewById(R.id.toolbar);
@@ -71,7 +79,8 @@ public class StudentMarksActivity extends AppCompatActivity {
         tvSubjectTitle = findViewById(R.id.tv_subject_title);
         ImageView btnBack = findViewById(R.id.btn_back);
 
-        tvSubjectTitle.setText("Enter Marks: " + subjectName);
+        // --- FIXED: Display the abbreviation in the title ---
+        tvSubjectTitle.setText("Enter Marks: " + subjectAbbr);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new MarksAdapter(studentList);
@@ -108,11 +117,9 @@ public class StudentMarksActivity extends AppCompatActivity {
             showHistoryDialog();
             return true;
         } else if (id == R.id.action_delete_current) {
-            // NEW: Delete only the currently visible exam
             confirmDeleteCurrent();
             return true;
         } else if (id == R.id.action_delete_all) {
-            // Delete everything for this subject
             confirmDeleteAll();
             return true;
         }
@@ -162,27 +169,13 @@ public class StudentMarksActivity extends AppCompatActivity {
                             })
                             .show();
                 })
-                // -----------------------------------------------------------------------
-                // TODO: STUDENT MODULE INTEGRATION (Future Implementation)
-                // -----------------------------------------------------------------------
-                // 1. Iterate through the 'marksData' Map (Key: UserUID, Value: Marks).
-                // 2. For each UserUID, reference: db.collection("users").document(uid).
-                // 3. Update the student's personal 'results' sub-collection.
-                //
-                // Example Logic:
-                // for (Map.Entry<String, String> entry : marksData.entrySet()) {
-                //     String studentUid = entry.getKey();
-                //     String obtained = entry.getValue();
-                //     updateStudentResult(studentUid, subjectName, examName, obtained, totalMarks);
-                // }
-                // -----------------------------------------------------------------------
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Error loading history. Check Logcat.", Toast.LENGTH_LONG).show();
                     Log.e("FirestoreError", e.getMessage());
                 });
     }
 
-    // 3. NEW: Delete Current Data Logic
+    // 3. Delete Current Data Logic
     private void confirmDeleteCurrent() {
         String examName = etExamName.getText().toString().trim();
 
@@ -205,7 +198,7 @@ public class StudentMarksActivity extends AppCompatActivity {
         db.collection("marks").document(docId).delete()
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Record Deleted", Toast.LENGTH_SHORT).show();
-                    clearForm(); // Clear the screen after deleting
+                    clearForm();
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
@@ -348,7 +341,7 @@ public class StudentMarksActivity extends AppCompatActivity {
             btnSubmit.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50")));
         } else {
             btnSubmit.setText("Submit Marks");
-            btnSubmit.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#D88D56")));
+            btnSubmit.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#2C969E")));
         }
     }
 }

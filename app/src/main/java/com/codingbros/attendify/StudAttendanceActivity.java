@@ -61,27 +61,20 @@ public class StudAttendanceActivity extends AppCompatActivity {
     private void calculateStudentAttendance() {
         progressBar.setVisibility(View.VISIBLE);
 
-        // Step 1: Fetch ALL attendance documents to calculate the student's stats
         db.collection("attendance").get().addOnSuccessListener(queryDocumentSnapshots -> {
 
             for (DocumentSnapshot doc : queryDocumentSnapshots) {
                 String subjectName = doc.getString("subject");
 
-                // FIXED HERE: Changed "attendance_data" to "attendanceData"
                 if (subjectName != null && doc.contains("attendanceData")) {
                     Map<String, String> attData = (Map<String, String>) doc.get("attendanceData");
 
-                    // If the logged-in student is in this attendance document
                     if (attData != null && attData.containsKey(studUid)) {
                         String status = attData.get(studUid);
 
-                        // Initialize array if subject is new
                         attendanceStats.putIfAbsent(subjectName, new int[]{0, 0});
-
-                        // Increment Total Classes [Index 1]
                         attendanceStats.get(subjectName)[1]++;
 
-                        // Increment Present Classes [Index 0]
                         if ("Present".equalsIgnoreCase(status)) {
                             attendanceStats.get(subjectName)[0]++;
                         }
@@ -89,7 +82,6 @@ public class StudAttendanceActivity extends AppCompatActivity {
                 }
             }
 
-            // Step 2: Now load the subjects and merge the calculations
             loadFacultySubjects();
 
         }).addOnFailureListener(e -> {
@@ -119,7 +111,6 @@ public class StudAttendanceActivity extends AppCompatActivity {
                                 if (name != null && !uniqueSubjects.contains(name)) {
                                     uniqueSubjects.add(name);
 
-                                    // Grab the calculated stats from Step 1
                                     int present = 0;
                                     int total = 0;
                                     int percentage = 0;
@@ -132,7 +123,6 @@ public class StudAttendanceActivity extends AppCompatActivity {
                                         }
                                     }
 
-                                    // Prepare data for the adapter
                                     HashMap<String, String> map = new HashMap<>();
                                     map.put("name", name);
                                     map.put("abbr", abbr != null ? abbr : "");
@@ -151,8 +141,18 @@ public class StudAttendanceActivity extends AppCompatActivity {
     }
 
     private void onSubjectClick(String subjectName) {
+        // --- FIXED: Find the abbreviation before sending the Intent ---
+        String subjectAbbr = subjectName; // Default fallback
+        for (Map<String, String> map : subjectList) {
+            if (subjectName.equals(map.get("name"))) {
+                subjectAbbr = map.get("abbr");
+                break;
+            }
+        }
+
         Intent intent = new Intent(this, StudAttendanceDetailActivity.class);
         intent.putExtra("subject_name", subjectName);
+        intent.putExtra("subject_abbr", subjectAbbr); // Pack it!
         startActivity(intent);
     }
 }

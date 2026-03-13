@@ -1,7 +1,11 @@
 package com.codingbros.attendify;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -15,207 +19,324 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class FacultydashboardActivity extends AppCompatActivity {
 
     private TextView tvWelcomeName;
     private ImageView btnLogoutIcon, btnNotification;
     private BottomNavigationView bottomNavigationView;
-
-    // NEW: Container for the dynamic class list
     private LinearLayout containerTodaysClasses;
 
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+
+    // --- NEW: A Set to store the faculty's registered subjects ---
+    private Set<String> myRegisteredSubjects = new HashSet<>();
+
+    private Handler refreshHandler = new Handler();
+    private Runnable refreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mAuth.getCurrentUser() != null) {
+                // Fetch registered subjects first, then load the timetable
+                fetchRegisteredSubjectsAndLoadClasses();
+            }
+            refreshHandler.postDelayed(this, 60000); // Check again in 60 seconds
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_facultydashboard);
 
-        // 1. Initialize Firebase
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+        com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("all_devices");
 
-        // 2. Link UI Components
+        // --- NEW: Runtime Permission Check for Notifications (Android 13+) ---
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+
+        // --- NEW: Check for Exact Alarm Permission (Android 12+) ---
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
+                // If denied, we ask the user to allow it in settings so our 5-minute timer works
+                Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                startActivity(intent);
+                Toast.makeText(this, "Please allow Attendify to set exact alarms for class reminders.", Toast.LENGTH_LONG).show();
+            }
+        }
+
         tvWelcomeName = findViewById(R.id.tv_welcome_name);
         btnLogoutIcon = findViewById(R.id.btn_logout_icon);
         btnNotification = findViewById(R.id.btn_notification);
         bottomNavigationView = findViewById(R.id.bottom_nav_faculty);
-
-        // NEW: Link the container
         containerTodaysClasses = findViewById(R.id.container_todays_classes);
 
-        // 3. Fetch Data
+        findViewById(R.id.btn_mark_attendance).setOnClickListener(v -> startActivity(new Intent(this, MarkAttendanceActivity.class)));
+        findViewById(R.id.btn_enter_marks).setOnClickListener(v -> startActivity(new Intent(this, EnterMarksActivity.class)));
+        findViewById(R.id.btn_edit_timetable).setOnClickListener(v -> startActivity(new Intent(this, EditTimetableActivity.class)));
+        findViewById(R.id.btn_status).setOnClickListener(v -> startActivity(new Intent(this, FacultyOtherFeaturesActivity.class)));
+
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            String uid = currentUser.getUid();
-
-            // Fetch Name
-            fetchFacultyData(uid);
-
-            // NEW: Fetch Today's Schedule
-            loadTodaysClasses(uid);
+            fetchFacultyData(currentUser.getUid());
         }
 
-        // 4. Logout Logic
         btnLogoutIcon.setOnClickListener(v -> {
             mAuth.signOut();
-            Toast.makeText(FacultydashboardActivity.this, "Logged Out Successfully", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(FacultydashboardActivity.this, RoleSelectionActivity.class);
+            Intent intent = new Intent(this, RoleSelectionActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
         });
 
-        // 5. Notification Logic
-        btnNotification.setOnClickListener(v -> {
-            Intent intent = new Intent(FacultydashboardActivity.this, NotificationActivity.class);
-            startActivity(intent);
-        });
+        btnNotification.setOnClickListener(v -> startActivity(new Intent(this, NotificationActivity.class)));
 
-        // 6. Bottom Navigation Logic
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-
-            if (itemId == R.id.nav_home) {
-                return true;
-            } else if (itemId == R.id.nav_attendance) {
+            if (itemId == R.id.nav_home) return true;
+            if (itemId == R.id.nav_attendance) {
                 startActivity(new Intent(this, MarkAttendanceActivity.class));
-                Toast.makeText(this, "Mark Attendance Screen", Toast.LENGTH_SHORT).show();
                 return true;
-            } else if (itemId == R.id.nav_timetable) {
+            }
+            if (itemId == R.id.nav_timetable) {
                 startActivity(new Intent(this, EditTimetableActivity.class));
-                Toast.makeText(this, "Edit Time Table Screen", Toast.LENGTH_SHORT).show();
                 return true;
-            } else if (itemId == R.id.nav_marks) {
+            }
+            if (itemId == R.id.nav_marks) {
                 startActivity(new Intent(this, EnterMarksActivity.class));
-                Toast.makeText(this, "Enter Marks Screen", Toast.LENGTH_SHORT).show();
                 return true;
-            } else if (itemId == R.id.nav_status) {
-                startActivity(new Intent(this, StatusActivity.class));
-                Toast.makeText(this, "Status Screen", Toast.LENGTH_SHORT).show();
+            }
+            if (itemId == R.id.nav_others) {
+                startActivity(new Intent(this, FacultyOtherFeaturesActivity.class));
                 return true;
             }
             return false;
         });
-
-        // Optional: Link Quick Action Grid Buttons (if you want them to work)
-        findViewById(R.id.btn_mark_attendance).setOnClickListener(v ->
-                Toast.makeText(this, "Mark Attendance", Toast.LENGTH_SHORT).show()
-        );
     }
 
-    // --- DATA FETCHING METHODS ---
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mAuth.getCurrentUser() != null) {
+            fetchRegisteredSubjectsAndLoadClasses();
+        }
+        refreshHandler.post(refreshRunnable);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        refreshHandler.removeCallbacks(refreshRunnable);
+    }
 
     private void fetchFacultyData(String userId) {
-        DocumentReference docRef = db.collection("faculty").document(userId);
-
-        docRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DocumentSnapshot document = task.getResult();
-                if (document.exists()) {
-                    String name = document.getString("name");
-                    if (name != null) {
-                        tvWelcomeName.setText("Hi, Prof. " + name);
-                    }
-                } else {
-                    Toast.makeText(this, "Faculty Profile not found.", Toast.LENGTH_SHORT).show();
-                    tvWelcomeName.setText("Hi, Faculty");
-                }
+        db.collection("faculty").document(userId).get().addOnSuccessListener(document -> {
+            if (document.exists() && document.getString("name") != null) {
+                tvWelcomeName.setText("Hello,\nProf. " + document.getString("name"));
             } else {
-                Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                tvWelcomeName.setText("Hello, Faculty");
             }
         });
     }
 
-    // --- NEW: Load Real-Time Classes ---
-    private void loadTodaysClasses(String uid) {
+    // --- NEW: Fetch the allowed subjects before displaying the class ---
+    private void fetchRegisteredSubjectsAndLoadClasses() {
+        String uid = mAuth.getCurrentUser().getUid();
+        db.collection("faculty").document(uid).collection("subjects").get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    myRegisteredSubjects.clear();
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        String name = doc.getString("name");
+                        if (name != null) {
+                            myRegisteredSubjects.add(name);
+                        }
+                    }
+                    loadTodaysClasses(); // Now load the timetable!
+                })
+                .addOnFailureListener(e -> loadTodaysClasses()); // Fallback
+    }
+
+    private void loadTodaysClasses() {
+        String todayDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+
+        db.collection("holidays").document(todayDate).get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                String reason = doc.getString("reason");
+                showNoClassesMessage("Classes cancelled today.\nHoliday: " + reason, true);
+            } else {
+                fetchClassesFromTimetable();
+            }
+        }).addOnFailureListener(e -> fetchClassesFromTimetable());
+    }
+
+    private void fetchClassesFromTimetable() {
         String currentDay = getDayString();
 
-        // Handle Weekends
         if (currentDay.equals("Sunday") || currentDay.equals("Saturday")) {
-            showNoClassesMessage("No classes on weekends!");
+            showNoClassesMessage("No classes on weekends!", false);
             return;
         }
 
-        db.collection("faculty").document(uid)
-                .collection("timetable").document(currentDay)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    containerTodaysClasses.removeAllViews(); // Clear "Loading..." or old views
+        db.collection("timetable").document(currentDay)
+                .get().addOnSuccessListener(documentSnapshot -> {
+                    containerTodaysClasses.removeAllViews();
 
                     if (documentSnapshot.exists() && documentSnapshot.getData() != null) {
                         Map<String, Object> data = documentSnapshot.getData();
-
-                        // Use TreeMap to sort keys automatically (slot_0, slot_1, etc.)
                         Map<String, Object> sortedData = new TreeMap<>(data);
-                        boolean hasClasses = false;
+
+                        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+                        Calendar nowCal = Calendar.getInstance();
+                        Map<String, String> classToDisplay = null;
 
                         for (Map.Entry<String, Object> entry : sortedData.entrySet()) {
-                            // Check if this slot actually contains class data
                             if (entry.getValue() instanceof Map) {
-                                Map<String, String> classDetails = (Map<String, String>) entry.getValue();
-                                addClassView(classDetails);
-                                hasClasses = true;
+                                Map<String, String> details = (Map<String, String>) entry.getValue();
+
+                                scheduleClassNotification(details.get("subject_name"), details.get("time_from"));
+
+                                if (classToDisplay == null) {
+                                    try {
+                                        Date timeToDate = sdf.parse(details.get("time_to"));
+                                        Calendar toCal = Calendar.getInstance();
+                                        toCal.setTime(timeToDate);
+
+                                        Calendar currentCompare = Calendar.getInstance();
+                                        currentCompare.set(Calendar.HOUR_OF_DAY, toCal.get(Calendar.HOUR_OF_DAY));
+                                        currentCompare.set(Calendar.MINUTE, toCal.get(Calendar.MINUTE));
+                                        currentCompare.set(Calendar.SECOND, 0);
+
+                                        if (nowCal.before(currentCompare)) {
+                                            classToDisplay = details;
+                                        }
+                                    } catch (Exception e) { e.printStackTrace(); }
+                                }
                             }
                         }
 
-                        if (!hasClasses) {
-                            showNoClassesMessage("No classes scheduled for today.");
+                        if (classToDisplay != null) {
+                            addClassView(classToDisplay);
+                        } else {
+                            showNoClassesMessage("All classes for today are completed.", false);
                         }
                     } else {
-                        showNoClassesMessage("No timetable found for " + currentDay);
+                        showNoClassesMessage("No timetable found for " + currentDay, false);
                     }
-                })
-                .addOnFailureListener(e ->
-                        showNoClassesMessage("Error loading classes.")
-                );
+                }).addOnFailureListener(e -> showNoClassesMessage("Error loading classes.", true));
+    }
+
+    private void scheduleClassNotification(String subjectName, String timeFrom) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+            Date timeFromDate = sdf.parse(timeFrom);
+
+            Calendar alarmCal = Calendar.getInstance();
+            Calendar parsedTime = Calendar.getInstance();
+            parsedTime.setTime(timeFromDate);
+
+            alarmCal.set(Calendar.HOUR_OF_DAY, parsedTime.get(Calendar.HOUR_OF_DAY));
+            alarmCal.set(Calendar.MINUTE, parsedTime.get(Calendar.MINUTE));
+            alarmCal.set(Calendar.SECOND, 0);
+
+            alarmCal.add(Calendar.MINUTE, -5);
+
+            if (alarmCal.getTimeInMillis() > System.currentTimeMillis()) {
+                Intent intent = new Intent(this, ClassAlertReceiver.class);
+                intent.putExtra("subject_name", subjectName);
+                intent.putExtra("time_from", timeFrom);
+
+                int requestCode = subjectName.hashCode() + timeFrom.hashCode();
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+                AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                if (alarmManager != null) {
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarmCal.getTimeInMillis(), pendingIntent);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void addClassView(Map<String, String> details) {
-        // 1. Inflate the single item layout
         View view = LayoutInflater.from(this).inflate(R.layout.item_todays_class, containerTodaysClasses, false);
 
-        // 2. Find views inside that layout
         TextView tvTime = view.findViewById(R.id.tv_class_time);
         TextView tvSubject = view.findViewById(R.id.tv_class_subject);
-        TextView tvTeacher = view.findViewById(R.id.tv_teacher_name); // Optional
+        TextView btnMarkNow = view.findViewById(R.id.btn_mark_now);
 
-        // 3. Extract Data
-        String subject = details.get("subject_name");
-        String timeFrom = details.get("time_from");
-        String timeTo = details.get("time_to");
+        tvTime.setText(details.get("time_from") + " - " + details.get("time_to"));
 
-        // 4. Set Text
-        tvTime.setText(timeFrom + " - " + timeTo);
-        tvSubject.setText(subject);
+        if ("true".equals(details.get("is_break"))) {
+            tvSubject.setText("☕ " + details.get("subject_name"));
+            tvSubject.setTextColor(android.graphics.Color.parseColor("#D84315"));
+            btnMarkNow.setVisibility(View.GONE);
+        } else {
+            String subjectName = details.get("subject_name");
+            tvSubject.setText(subjectName);
+            btnMarkNow.setVisibility(View.VISIBLE);
 
-        // 5. Add to the main list container
+            // --- FIXED: Verify if the faculty actually owns this subject! ---
+            btnMarkNow.setOnClickListener(v -> {
+                if (myRegisteredSubjects.contains(subjectName)) {
+                    // Validated! Let them proceed.
+                    Intent intent = new Intent(FacultydashboardActivity.this, StudentListActivity.class);
+                    intent.putExtra("subject_name", subjectName);
+                    intent.putExtra("subject_abbr", details.get("subject_abbr"));
+                    startActivity(intent);
+                } else {
+                    // Blocked! Tell them exactly what to do.
+                    Toast.makeText(FacultydashboardActivity.this,
+                            "Access Denied: Please add '" + subjectName + "' in the Mark Attendance section first.",
+                            Toast.LENGTH_LONG).show();
+                }
+            });
+        }
         containerTodaysClasses.addView(view);
     }
 
-    private void showNoClassesMessage(String message) {
+    private void showNoClassesMessage(String message, boolean isHoliday) {
         containerTodaysClasses.removeAllViews();
         TextView tv = new TextView(this);
         tv.setText(message);
-        tv.setTextColor(getResources().getColor(android.R.color.darker_gray));
         tv.setTextSize(16);
         tv.setPadding(10, 20, 10, 20);
+
+        if (isHoliday) {
+            tv.setTextColor(android.graphics.Color.parseColor("#E53935"));
+        } else {
+            tv.setTextColor(getResources().getColor(android.R.color.darker_gray));
+        }
         containerTodaysClasses.addView(tv);
     }
 
     private String getDayString() {
         Calendar calendar = Calendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK);
-
         switch (day) {
             case Calendar.MONDAY: return "Monday";
             case Calendar.TUESDAY: return "Tuesday";

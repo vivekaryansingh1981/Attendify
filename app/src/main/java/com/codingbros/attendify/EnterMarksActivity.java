@@ -7,7 +7,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,13 +36,12 @@ public class EnterMarksActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
 
-        // Load the same subjects stored in the Attendance module
         loadSubjects();
     }
 
     private void loadSubjects() {
         db.collection("faculty").document(facultyUid)
-                .collection("subjects") // SAME COLLECTION AS ATTENDANCE
+                .collection("subjects")
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -60,7 +58,6 @@ public class EnterMarksActivity extends AppCompatActivity {
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             String name = document.getString("name");
                             String abbr = document.getString("abbr");
-                            // Reusing the same layout logic
                             addSubjectView(name, abbr, document.getId());
                         }
                     }
@@ -68,21 +65,23 @@ public class EnterMarksActivity extends AppCompatActivity {
     }
 
     private void addSubjectView(String name, String abbr, String docId) {
-        // Reuse the existing card layout
         View view = LayoutInflater.from(this).inflate(R.layout.item_subject_card, containerSubjects, false);
 
         TextView tvName = view.findViewById(R.id.tv_subject_name);
         TextView tvAbbr = view.findViewById(R.id.tv_subject_abbr);
+        LinearLayout layoutStats = view.findViewById(R.id.layout_attendance_stats);
 
         tvName.setText(name);
         tvAbbr.setText(abbr);
 
-        // Click Listener (Placeholder for next task)
+        // --- FIXED: Explicitly hide the attendance stats block here ---
+        layoutStats.setVisibility(View.GONE);
+
         view.setOnClickListener(v -> {
             Intent intent = new Intent(this, StudentMarksActivity.class);
             intent.putExtra("subject_name", name);
+            intent.putExtra("subject_abbr", abbr);
             startActivity(intent);
-            Toast.makeText(this, "Selected: " + name + ". Ready for Marks logic.", Toast.LENGTH_SHORT).show();
         });
 
         containerSubjects.addView(view);

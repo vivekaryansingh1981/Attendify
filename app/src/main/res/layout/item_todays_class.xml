@@ -20,7 +20,7 @@
         <View
             android:layout_width="4dp"
             android:layout_height="40dp"
-            android:background="#D88D56"/>
+            android:background="#2C969E"/>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -58,15 +58,16 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/btn_mark_now"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Mark Now"
             android:paddingHorizontal="16dp"
             android:paddingVertical="8dp"
             android:background="@drawable/ripple_select"
-            android:backgroundTint="#F4CBA0"
+            android:backgroundTint="#2C969E"
             android:textStyle="bold"
-            android:textColor="#5D4037"/>
+            android:textColor="#FFFFFF"/>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
