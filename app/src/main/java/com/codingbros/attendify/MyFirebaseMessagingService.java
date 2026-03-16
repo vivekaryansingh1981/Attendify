@@ -21,55 +21,49 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
-        // Check if the message contains a notification payload.
+        // 1. Standard Notification (App is Open)
         if (remoteMessage.getNotification() != null) {
-            String title = remoteMessage.getNotification().getTitle();
-            String body = remoteMessage.getNotification().getBody();
-            showNotification(title, body);
+            showNotification(remoteMessage.getNotification().getTitle(), remoteMessage.getNotification().getBody());
+        }
+
+        // 2. Data Payload (App is Closed/Background)
+        if (remoteMessage.getData().size() > 0) {
+            showNotification(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"));
         }
     }
 
     private void showNotification(String title, String body) {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        // Create the Notification Channel for Android 8.0+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     "Global Alerts",
                     NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Holidays and Important Notices");
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
             }
         }
 
-        // What happens when the user taps the notification
-        Intent intent = new Intent(this, RoleSelectionActivity.class);
+        // Tap action routes to Splash so it properly checks login session
+        Intent intent = new Intent(this, SplashActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
+        // THE FIX: Added DEFAULT_ALL to force the WhatsApp-style popup drop-down and sound!
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification) // Make sure this icon exists, or use android.R.drawable.ic_dialog_info
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setContentIntent(pendingIntent);
 
         if (notificationManager != null) {
-            // Generate a random ID so notifications don't overwrite each other
-            int notificationId = (int) System.currentTimeMillis();
-            notificationManager.notify(notificationId, builder.build());
+            notificationManager.notify((int) System.currentTimeMillis(), builder.build());
         }
-    }
-
-    @Override
-    public void onNewToken(@NonNull String token) {
-        super.onNewToken(token);
-        // This token represents this specific device.
-        // We don't need to manually store it right now because we will use "Topics".
     }
 }

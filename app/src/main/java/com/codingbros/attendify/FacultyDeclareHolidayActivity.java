@@ -1,12 +1,6 @@
 package com.codingbros.attendify;
 
-import android.Manifest;
 import android.app.DatePickerDialog;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -16,9 +10,6 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
@@ -54,13 +45,6 @@ public class FacultyDeclareHolidayActivity extends AppCompatActivity {
         }
 
         fetchFacultyName();
-
-        // Permission Check for Notifications
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
-            }
-        }
 
         btnStartDate = findViewById(R.id.btn_start_date);
         btnEndDate = findViewById(R.id.btn_end_date);
@@ -141,28 +125,28 @@ public class FacultyDeclareHolidayActivity extends AppCompatActivity {
             String dateStr = String.format(Locale.getDefault(), "%02d-%02d-%04d",
                     current.get(Calendar.DAY_OF_MONTH), current.get(Calendar.MONTH) + 1, current.get(Calendar.YEAR));
 
-            // 1. Update Faculty's Personal DB
             updateStatus(dateStr, isDeclare ? "Holiday" : "Available", reason);
 
-            // 2. NEW: Update Global Holidays DB for Students/Parents
             if (isDeclare) {
                 Map<String, Object> globalHoliday = new HashMap<>();
                 globalHoliday.put("reason", reason);
                 globalHoliday.put("declaredBy", facultyName);
                 db.collection("holidays").document(dateStr).set(globalHoliday);
             } else {
-                db.collection("holidays").document(dateStr).delete(); // Remove if cancelled
+                db.collection("holidays").document(dateStr).delete();
             }
 
             current.add(Calendar.DATE, 1);
         }
 
+        // Only Toast and Data update remains here.
+        // The physical notification is now handled ONLY by your laptop server.
         if (isDeclare) {
             Toast.makeText(this, "Holiday Declared Globally", Toast.LENGTH_SHORT).show();
-            sendNotification("Holiday Alert", "Holiday declared by Prof. " + facultyName + ": " + reason);
+            syncNotificationToDatabase("Holiday Alert", "Holiday declared by Prof. " + facultyName + ": " + reason);
         } else {
             Toast.makeText(this, "Holiday Cancelled", Toast.LENGTH_SHORT).show();
-            sendNotification("Update", "Holiday cancelled by Prof. " + facultyName + ". Classes resumed.");
+            syncNotificationToDatabase("Update", "Holiday cancelled by Prof. " + facultyName + ". Classes resumed.");
             etHolidayReason.setText("");
         }
     }
@@ -175,37 +159,18 @@ public class FacultyDeclareHolidayActivity extends AppCompatActivity {
         data.put("message", reason);
         data.put("date", date);
 
-        // Saving to the unified availability collection
         db.collection("faculty").document(facultyUid)
                 .collection("availability").document(date)
                 .set(data, SetOptions.merge());
     }
 
-    private void sendNotification(String title, String message) {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        String channelId = "status_channel";
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(channelId, "Status Updates", NotificationManager.IMPORTANCE_HIGH);
-            notificationManager.createNotificationChannel(channel);
-        }
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                notificationManager.notify((int) System.currentTimeMillis(), builder.build());
-            }
-        } else {
-            notificationManager.notify((int) System.currentTimeMillis(), builder.build());
-        }
-
-        // Save to Firestore (In-App Notification Page)
+    /**
+     * This method no longer builds a local notification.
+     * It only saves the data to Firestore so the 'Notification History'
+     * page stays updated. The actual push notification popup will now
+     * only come from your Node.js server.
+     */
+    private void syncNotificationToDatabase(String title, String message) {
         Map<String, Object> notifData = new HashMap<>();
         notifData.put("title", title);
         notifData.put("message", message);

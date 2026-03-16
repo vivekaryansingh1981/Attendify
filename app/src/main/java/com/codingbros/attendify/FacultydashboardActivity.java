@@ -31,11 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.os.Build;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 public class FacultydashboardActivity extends AppCompatActivity {
 
@@ -47,7 +43,6 @@ public class FacultydashboardActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
-    // --- NEW: A Set to store the faculty's registered subjects ---
     private Set<String> myRegisteredSubjects = new HashSet<>();
 
     private Handler refreshHandler = new Handler();
@@ -55,10 +50,9 @@ public class FacultydashboardActivity extends AppCompatActivity {
         @Override
         public void run() {
             if (mAuth.getCurrentUser() != null) {
-                // Fetch registered subjects first, then load the timetable
                 fetchRegisteredSubjectsAndLoadClasses();
             }
-            refreshHandler.postDelayed(this, 60000); // Check again in 60 seconds
+            refreshHandler.postDelayed(this, 60000);
         }
     };
 
@@ -71,18 +65,10 @@ public class FacultydashboardActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("all_devices");
 
-        // --- NEW: Runtime Permission Check for Notifications (Android 13+) ---
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
-            }
-        }
-
-        // --- NEW: Check for Exact Alarm Permission (Android 12+) ---
+        // Check for Exact Alarm Permission (Android 12+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
-                // If denied, we ask the user to allow it in settings so our 5-minute timer works
                 Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
                 startActivity(intent);
                 Toast.makeText(this, "Please allow Attendify to set exact alarms for class reminders.", Toast.LENGTH_LONG).show();
@@ -163,7 +149,6 @@ public class FacultydashboardActivity extends AppCompatActivity {
         });
     }
 
-    // --- NEW: Fetch the allowed subjects before displaying the class ---
     private void fetchRegisteredSubjectsAndLoadClasses() {
         String uid = mAuth.getCurrentUser().getUid();
         db.collection("faculty").document(uid).collection("subjects").get()
@@ -175,9 +160,9 @@ public class FacultydashboardActivity extends AppCompatActivity {
                             myRegisteredSubjects.add(name);
                         }
                     }
-                    loadTodaysClasses(); // Now load the timetable!
+                    loadTodaysClasses();
                 })
-                .addOnFailureListener(e -> loadTodaysClasses()); // Fallback
+                .addOnFailureListener(e -> loadTodaysClasses());
     }
 
     private void loadTodaysClasses() {
@@ -300,16 +285,13 @@ public class FacultydashboardActivity extends AppCompatActivity {
             tvSubject.setText(subjectName);
             btnMarkNow.setVisibility(View.VISIBLE);
 
-            // --- FIXED: Verify if the faculty actually owns this subject! ---
             btnMarkNow.setOnClickListener(v -> {
                 if (myRegisteredSubjects.contains(subjectName)) {
-                    // Validated! Let them proceed.
                     Intent intent = new Intent(FacultydashboardActivity.this, StudentListActivity.class);
                     intent.putExtra("subject_name", subjectName);
                     intent.putExtra("subject_abbr", details.get("subject_abbr"));
                     startActivity(intent);
                 } else {
-                    // Blocked! Tell them exactly what to do.
                     Toast.makeText(FacultydashboardActivity.this,
                             "Access Denied: Please add '" + subjectName + "' in the Mark Attendance section first.",
                             Toast.LENGTH_LONG).show();

@@ -1,11 +1,6 @@
 package com.codingbros.attendify;
 
-import android.Manifest;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Build;
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -18,9 +13,6 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -54,12 +46,11 @@ public class FacultyAvailabilityActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
     private String facultyUid;
-    private String facultyName = "Faculty"; // Default fallback
+    private String facultyName = "Faculty";
 
     private Calendar currentDisplayMonth;
     private String currentlySelectedDateStr = "";
 
-    // Store full data map for dates
     private Map<String, Map<String, Object>> availabilityMap = new HashMap<>();
     private Map<String, String> currentMonthDisplayMap = new HashMap<>();
 
@@ -73,15 +64,7 @@ public class FacultyAvailabilityActivity extends AppCompatActivity {
             facultyUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         }
 
-        // --- Fetch Name immediately upon opening ---
         fetchFacultyName();
-
-        // --- Permission Check (From your original StatusActivity) ---
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
-            }
-        }
 
         currentDisplayMonth = Calendar.getInstance();
 
@@ -113,12 +96,10 @@ public class FacultyAvailabilityActivity extends AppCompatActivity {
             updateCalendarForMonth();
         });
 
-        // Default Date is Today
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
         currentlySelectedDateStr = sdf.format(Calendar.getInstance().getTime());
         tvSelectedDate.setText("Status for: " + currentlySelectedDateStr);
 
-        // Toggle Adjustment Box Visibility
         radioGroupStatus.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.radio_not_available) {
                 layoutAdjustment.setVisibility(View.VISIBLE);
@@ -128,22 +109,18 @@ public class FacultyAvailabilityActivity extends AppCompatActivity {
             }
         });
 
-        // Handle Save Click
         btnSaveStatus.setOnClickListener(v -> saveStatusUpdate());
 
         fetchAvailabilityData();
     }
 
-    // --- Fetches Name so it is ready for the Notification ---
     private void fetchFacultyName() {
         if (facultyUid == null) return;
 
-        // Check Faculty collection
         db.collection("faculty").document(facultyUid).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists() && documentSnapshot.getString("name") != null) {
                 facultyName = documentSnapshot.getString("name");
             } else {
-                // Check Users collection as a backup
                 db.collection("users").document(facultyUid).get().addOnSuccessListener(userDoc -> {
                     if (userDoc.exists() && userDoc.getString("name") != null) {
                         facultyName = userDoc.getString("name");
@@ -179,7 +156,6 @@ public class FacultyAvailabilityActivity extends AppCompatActivity {
             return;
         }
 
-        // Check previous status so we know if they are canceling an old absence
         String previousStatus = "";
         if (availabilityMap.containsKey(currentlySelectedDateStr)) {
             Map<String, Object> oldData = availabilityMap.get(currentlySelectedDateStr);
@@ -196,7 +172,6 @@ public class FacultyAvailabilityActivity extends AppCompatActivity {
             data.put("adjustment_message", "");
         }
 
-        // Save to Database
         String finalPreviousStatus = previousStatus;
         db.collection("faculty").document(facultyUid)
                 .collection("availability").document(currentlySelectedDateStr)
@@ -206,43 +181,22 @@ public class FacultyAvailabilityActivity extends AppCompatActivity {
                     updateCalendarForMonth();
                     Toast.makeText(this, "Status saved for " + currentlySelectedDateStr, Toast.LENGTH_SHORT).show();
 
-                    // --- Send Appropriate Notification ---
                     if (status.equals("Not Available")) {
                         String msg = "Prof. " + facultyName + " is unavailable on " + currentlySelectedDateStr + ". Adjustment: " + message;
-                        sendNotification("Lecture Adjustment Alert", msg);
+                        syncNotificationToDatabase("Lecture Adjustment Alert", msg);
                     } else if (status.equals("Available") && "Not Available".equals(finalPreviousStatus)) {
                         String msg = "Prof. " + facultyName + " is now AVAILABLE on " + currentlySelectedDateStr + ". Regular schedule resumes.";
-                        sendNotification("Lecture Adjustment Cancelled", msg);
+                        syncNotificationToDatabase("Lecture Adjustment Cancelled", msg);
                     }
                 });
     }
 
-    // --- YOUR EXACT NOTIFICATION METHOD FROM STATUSACTIVITY ---
-    private void sendNotification(String title, String message) {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        String channelId = "status_channel";
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(channelId, "Status Updates", NotificationManager.IMPORTANCE_HIGH);
-            notificationManager.createNotificationChannel(channel);
-        }
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.drawable.ic_notification) // Using standard Android icon for safety
-                .setContentTitle(title)
-                .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                notificationManager.notify((int) System.currentTimeMillis(), builder.build());
-            }
-        } else {
-            notificationManager.notify((int) System.currentTimeMillis(), builder.build());
-        }
-
-        // Save to Firestore (In-App Notification Page)
+    /**
+     * This method no longer triggers a system notification.
+     * It only saves the alert to Firestore so the in-app notification history page stays updated.
+     * Your Node.js server will handle the actual push notification popup.
+     */
+    private void syncNotificationToDatabase(String title, String message) {
         Map<String, Object> notifData = new HashMap<>();
         notifData.put("title", title);
         notifData.put("message", message);
@@ -268,11 +222,11 @@ public class FacultyAvailabilityActivity extends AppCompatActivity {
                     String status = (String) entry.getValue().get("status");
 
                     if ("Not Available".equals(status)) {
-                        currentMonthDisplayMap.put(day, "Absent"); // RED
+                        currentMonthDisplayMap.put(day, "Absent");
                     } else if ("Present".equals(status)) {
-                        currentMonthDisplayMap.put(day, "Present"); // GREEN
+                        currentMonthDisplayMap.put(day, "Present");
                     } else if ("Holiday".equals(status)) {
-                        currentMonthDisplayMap.put(day, "Holiday"); // YELLOW
+                        currentMonthDisplayMap.put(day, "Holiday");
                     }
                 }
             } catch (Exception e) {

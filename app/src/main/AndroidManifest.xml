@@ -25,6 +25,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity android:name=".RoleSelectionActivity"/>
         <activity android:name=".NoticeBoardActivity" />
         <activity android:name=".AcademicCalendarActivity" />
@@ -51,13 +52,18 @@
         <activity android:name=".StudMarksSubjectActivity" />
         <activity android:name=".StudMarksResultActivity" />
         <activity android:name=".TodaysClassesActivity" />
-        <activity android:name=".FacultyAvailabilityActivity"/>
+
+        <activity
+            android:name=".FacultyAvailabilityActivity"
+            android:windowSoftInputMode="adjustPan"/>
+
         <activity android:name=".FacultyDeclareHolidayActivity"/>
         <activity android:name=".FacultySendNoticeActivity"/>
         <activity android:name=".FacultyManageNoticesActivity"/>
         <activity android:name=".FacultyCalendarEditorActivity" />
         <activity android:name=".FacultyPresentSubjectsActivity" />
         <activity android:name=".FacultyPresentListActivity"/>
+
         <receiver android:name=".ClassAlertReceiver" android:exported="false" />
 
         <service
