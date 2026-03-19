@@ -38,8 +38,11 @@ public class EditTimetableActivity extends AppCompatActivity {
     private boolean isLocked = false;
 
     private Map<String, Map<String, String>> timetableData = new HashMap<>();
-    private final String[] DAYS = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
 
+    // --- NEW: This tracks ONLY the slots the user specifically edited this session ---
+    private Map<String, Object> pendingUpdates = new HashMap<>();
+
+    private final String[] DAYS = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
     private final int SLOTS_PER_DAY = 8;
 
     @Override
@@ -148,7 +151,6 @@ public class EditTimetableActivity extends AppCompatActivity {
             String from = etTimeFrom.getText().toString().trim();
             String to = etTimeTo.getText().toString().trim();
 
-            // --- NEW: Smart Break Detection ---
             boolean isBreak = name.toLowerCase().contains("break") || abbr.toLowerCase().contains("break");
 
             if (isBreak) {
@@ -156,10 +158,9 @@ public class EditTimetableActivity extends AppCompatActivity {
                     Toast.makeText(this, "Please select From and To time for the break", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                // Auto-fill missing fields cleanly if they just typed "Break"
                 name = TextUtils.isEmpty(name) ? "Break" : name;
                 abbr = TextUtils.isEmpty(abbr) ? "BREAK" : abbr;
-                teacher = "-"; // No teacher required
+                teacher = "-";
             } else {
                 if (TextUtils.isEmpty(name) || TextUtils.isEmpty(teacher) || TextUtils.isEmpty(abbr) || TextUtils.isEmpty(from) || TextUtils.isEmpty(to)) {
                     Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
@@ -167,11 +168,10 @@ public class EditTimetableActivity extends AppCompatActivity {
                 }
             }
 
-            // --- NEW: Distinct UI for Breaks vs Lectures ---
             if (isBreak) {
                 String buttonText = "☕ " + abbr.toUpperCase() + "\n" + from + "-" + to;
                 slotBtn.setText(buttonText);
-                slotBtn.setTextColor(Color.parseColor("#D84315")); // Deep Orange
+                slotBtn.setTextColor(Color.parseColor("#D84315"));
             } else {
                 String buttonText = abbr + "\n" + from + "-" + to;
                 slotBtn.setText(buttonText);
@@ -184,9 +184,12 @@ public class EditTimetableActivity extends AppCompatActivity {
             subjectDetails.put("subject_abbr", abbr);
             subjectDetails.put("time_from", from);
             subjectDetails.put("time_to", to);
-            subjectDetails.put("is_break", isBreak ? "true" : "false"); // Tag it in Firebase
+            subjectDetails.put("is_break", isBreak ? "true" : "false");
 
             timetableData.put(key, subjectDetails);
+
+            // --- FIXED: Log this specific edit into our tracking map ---
+            pendingUpdates.put(key, subjectDetails);
 
             dialog.dismiss();
         });
@@ -195,6 +198,10 @@ public class EditTimetableActivity extends AppCompatActivity {
             timetableData.remove(key);
             slotBtn.setText("Tap to\nEdit");
             slotBtn.setTextColor(Color.DKGRAY);
+
+            // --- FIXED: Log a deliberate deletion into our tracking map ---
+            pendingUpdates.put(key, FieldValue.delete());
+
             Toast.makeText(this, "Cleared. Click Submit to save.", Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
@@ -229,23 +236,24 @@ public class EditTimetableActivity extends AppCompatActivity {
         btnSubmit.setEnabled(false);
         btnSubmit.setText("Saving...");
 
-        for (int i = 0; i < DAYS.length; i++) {
-            String day = DAYS[i];
-            Map<String, Object> dayData = new HashMap<>();
+        // --- FIXED: Delta Updates! We only process the slots the user explicitly modified ---
+        Map<String, Map<String, Object>> updatesByDay = new HashMap<>();
 
-            for (int j = 0; j < SLOTS_PER_DAY; j++) {
-                String key = day + "_" + j;
+        for (Map.Entry<String, Object> entry : pendingUpdates.entrySet()) {
+            String[] parts = entry.getKey().split("_"); // e.g., "Monday" and "0"
+            String day = parts[0];
+            String slotKey = "slot_" + parts[1];
 
-                if (timetableData.containsKey(key)) {
-                    dayData.put("slot_" + j, timetableData.get(key));
-                } else {
-                    dayData.put("slot_" + j, FieldValue.delete());
-                }
-            }
-
-            db.collection("timetable").document(day).set(dayData, SetOptions.merge());
+            updatesByDay.putIfAbsent(day, new HashMap<>());
+            updatesByDay.get(day).put(slotKey, entry.getValue());
         }
 
+        // Send only the localized updates to Firebase
+        for (Map.Entry<String, Map<String, Object>> dayEntry : updatesByDay.entrySet()) {
+            db.collection("timetable").document(dayEntry.getKey()).set(dayEntry.getValue(), SetOptions.merge());
+        }
+
+        // Secure the timetable
         Map<String, Object> status = new HashMap<>();
         status.put("is_timetable_locked", true);
 
@@ -253,6 +261,7 @@ public class EditTimetableActivity extends AppCompatActivity {
                 .set(status, SetOptions.merge())
                 .addOnSuccessListener(aVoid -> {
                     isLocked = true;
+                    pendingUpdates.clear(); // Wipe the slate clean after successful save
                     updateUIVisibility();
                     Toast.makeText(this, "Global Timetable Updated & Locked!", Toast.LENGTH_SHORT).show();
                 })
@@ -296,7 +305,6 @@ public class EditTimetableActivity extends AppCompatActivity {
                 String from = data.get("time_from");
                 String to = data.get("time_to");
 
-                // --- NEW: Distinct UI on Load ---
                 boolean isBreak = "true".equals(data.get("is_break")) ||
                         (abbr != null && abbr.toLowerCase().contains("break")) ||
                         (data.get("subject_name") != null && data.get("subject_name").toLowerCase().contains("break"));

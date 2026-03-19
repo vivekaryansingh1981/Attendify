@@ -2,6 +2,7 @@ package com.codingbros.attendify;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageView;
@@ -42,6 +43,18 @@ public class StudashboardActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
+    // --- NEW: Auto-refresh timer for live class switching ---
+    private Handler refreshHandler = new Handler();
+    private Runnable refreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mAuth.getCurrentUser() != null) {
+                loadTodaysClasses();
+            }
+            refreshHandler.postDelayed(this, 60000); // Check the clock every 60 seconds
+        }
+    };
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,7 +63,6 @@ public class StudashboardActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("all_devices");
-
 
         tvWelcomeName = findViewById(R.id.tv_welcome_name);
         tvAttendancePercentage = findViewById(R.id.tv_attendance_percentage);
@@ -73,7 +85,6 @@ public class StudashboardActivity extends AppCompatActivity {
         if (currentUser != null) {
             fetchStudentName(currentUser.getUid());
             calculateOverallAttendance(currentUser.getUid());
-            // loadTodaysClasses() moved to onResume() for instant refresh
         } else {
             startActivity(new Intent(this, StudentLoginActivity.class));
             finish();
@@ -124,13 +135,19 @@ public class StudashboardActivity extends AppCompatActivity {
         });
     }
 
-    // --- NEW: Added onResume to refresh data instantly ---
     @Override
     protected void onResume() {
         super.onResume();
         if (mAuth.getCurrentUser() != null) {
             loadTodaysClasses();
         }
+        refreshHandler.post(refreshRunnable); // Start live timer
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        refreshHandler.removeCallbacks(refreshRunnable); // Pause timer to save battery
     }
 
     private void setupGridMenuListeners() {
@@ -214,9 +231,8 @@ public class StudashboardActivity extends AppCompatActivity {
             return;
         }
 
-        // --- FIXED: Now fetches from the global timetable collection ---
         db.collection("timetable").document(currentDay).get().addOnSuccessListener(documentSnapshot -> {
-            upcomingClassesList.clear();
+            List<Map<String, String>> allTodaysClasses = new ArrayList<>();
 
             if (documentSnapshot.exists() && documentSnapshot.getData() != null) {
                 Map<String, Object> data = documentSnapshot.getData();
@@ -225,35 +241,50 @@ public class StudashboardActivity extends AppCompatActivity {
                     if (entry.getValue() instanceof Map) {
                         Map<String, String> classDetails = (Map<String, String>) entry.getValue();
 
-                        // --- NEW: Add the Break Emoji if it's a break ---
                         if ("true".equals(classDetails.get("is_break"))) {
                             String originalName = classDetails.get("subject_name");
                             classDetails.put("subject_name", "☕ " + originalName);
                         }
-
-                        upcomingClassesList.add(classDetails);
+                        allTodaysClasses.add(classDetails);
                     }
                 }
             }
 
-            if (upcomingClassesList.isEmpty()) {
+            if (allTodaysClasses.isEmpty()) {
                 showNoClassesMessage("No classes scheduled for today.", false);
             } else {
-                java.util.Collections.sort(upcomingClassesList, (c1, c2) -> {
+                // Sort classes by time
+                java.util.Collections.sort(allTodaysClasses, (c1, c2) -> {
                     return Integer.compare(parseTimeToMinutes(c1.get("time_from")), parseTimeToMinutes(c2.get("time_from")));
                 });
 
-                // Display only the next upcoming class
-                if (upcomingClassesList.size() > 1) {
-                    Map<String, String> firstClass = upcomingClassesList.get(0);
-                    upcomingClassesList.clear();
-                    upcomingClassesList.add(firstClass);
+                // --- NEW: Live Clock Filtering ---
+                Calendar now = Calendar.getInstance();
+                int currentMinutes = (now.get(Calendar.HOUR_OF_DAY) * 60) + now.get(Calendar.MINUTE);
+
+                Map<String, String> activeClass = null;
+
+                for (Map<String, String> classDetails : allTodaysClasses) {
+                    int endTimeMinutes = parseTimeToMinutes(classDetails.get("time_to"));
+
+                    // If the current time is before the end of this class, it is our active/next class!
+                    if (currentMinutes < endTimeMinutes) {
+                        activeClass = classDetails;
+                        break;
+                    }
                 }
 
-                tvNoClassesMsg.setVisibility(View.GONE);
-                recyclerUpcomingClasses.setVisibility(View.VISIBLE);
-                btnSeeAll.setVisibility(View.VISIBLE);
-                timetableAdapter.notifyDataSetChanged();
+                upcomingClassesList.clear();
+
+                if (activeClass != null) {
+                    upcomingClassesList.add(activeClass);
+                    tvNoClassesMsg.setVisibility(View.GONE);
+                    recyclerUpcomingClasses.setVisibility(View.VISIBLE);
+                    btnSeeAll.setVisibility(View.VISIBLE);
+                    timetableAdapter.notifyDataSetChanged();
+                } else {
+                    showNoClassesMessage("All classes for today are completed.", false);
+                }
             }
         }).addOnFailureListener(e -> showNoClassesMessage("Error loading classes.", true));
     }
