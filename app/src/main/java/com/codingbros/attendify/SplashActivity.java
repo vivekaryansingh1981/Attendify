@@ -10,7 +10,7 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class SplashActivity extends AppCompatActivity {
 
-    private static final int SPLASH_DELAY = 3000; // 3 seconds
+    private static final int SPLASH_DELAY = 1500; // 1.5 seconds
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
